@@ -32,7 +32,7 @@ jobs:
         with:
           webhook-url: ${{ secrets.WEBHOOK }}
           content: |
-            # \#[${{ steps.commit.outputs.short-commit-hash }}](${{ github.event.repository.html_url }}/commit/${{ steps.commit.outputs.short-commit-hash }})
+            # [#${{ steps.commit.outputs.short-commit-hash }}](${{ github.event.repository.html_url }}/commit/${{ steps.commit.outputs.short-commit-hash }})
             ${{ steps.commit.outputs.commit-diff }}
           embed-title: ${{ steps.commit.outputs.commit-message }}
           embed-description: ${{ steps.commit.outputs.commit-message-full }}
