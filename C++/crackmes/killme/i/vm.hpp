@@ -1,5 +1,4 @@
-#ifndef VM_HPP
-#define VM_HPP
+#pragma once
 
 #include <windows.h>
 #include <iphlpapi.h>
@@ -14,5 +13,3 @@ public:
     //bool checkTiming();
     bool checkVM();
 };
-
-#endif // VM_HPP

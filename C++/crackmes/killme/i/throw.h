@@ -1,5 +1,4 @@
-#ifndef ERRORS_H
-#define ERRORS_H
+#pragma once
 
 #include <stdexcept>
 #include <string>
@@ -32,5 +31,3 @@ public:
 };
 
 #define THROW(x) throw Error(Error::gen())
-
-#endif  // ERRORS_H

@@ -160,7 +160,7 @@ extern "C" {
 } //hardcode the link at this point
 #include <tlhelp32.h>
 #else
-exit(0);
+exit(-1);
 #endif
 
 ///////////// <summary>
@@ -172,7 +172,7 @@ bool VMD::checkHW() {
     PIP_ADAPTER_INFO pAI = (IP_ADAPTER_INFO*)malloc(out);
     GetAdaptersInfo(pAI, &out);
 
-    if (strstr(pAI->AdapterName, "VMware") || strstr(pAI->AdapterName, "VirtualBox") || strstr(pAI->AdapterName, "Xen")) {
+    if (strstr(pAI->AdapterName, "VMware") || strstr(pAI->AdapterName, "VirtualBox") /*|| strstr(pAI->AdapterName, "Xen")*/) {
         free(pAI);
         return true;
     }
@@ -183,7 +183,7 @@ bool VMD::checkHW() {
 
 bool VMD::checkRegedit() {
     HKEY hKey;
-    LONG res = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\VMware, Inc.\\VMware Tools", 0, KEY_QUERY_VALUE, &hKey);
+    LONG res = RegOpenKeyEx(HKEY_LOCAL_MACHINE, (LPCSTR)"SOFTWARE\\VMware, Inc.\\VMware Tools", 0, KEY_QUERY_VALUE, &hKey);
     if (res == ERROR_SUCCESS) {
         RegCloseKey(hKey);
         return true;
@@ -193,7 +193,7 @@ bool VMD::checkRegedit() {
 
 bool VMD::checkFiles() {
     WIN32_FIND_DATA findData;
-    HANDLE hFind = FindFirstFile("C:\\Windows\\System32\\vmwareuser.exe", &findData);
+    HANDLE hFind = FindFirstFile((LPCSTR)"C:\\Windows\\System32\\vmwareuser.exe", &findData);
     if (hFind != INVALID_HANDLE_VALUE) {
         FindClose(hFind);
         return true;
@@ -255,14 +255,14 @@ struct cualloc {
     }
 };
 cualloc ok;
-auto pp1 = ok.alloc(0x1);
+cualloc::pointer pp1 = ok.alloc(0x1);
 
 auto trans = [](bool b) {
     char c = 'o';
     uint32_t key = _mm_crc32_u32(0, static_cast<uint32_t>(std::tolower(c)));
     return (b ? 'T' : 'F') ^ (key & 0xFF);
     };
-auto** pp2 = &pp1;
+bool** pp2 = &pp1;
 
 typedef union {
     int dyn;
@@ -275,7 +275,7 @@ void cls() {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     COORD pos = { 0, 0 }; // top-left corner
     DWORD written;
-    FillConsoleOutputCharacter(hConsole, ' ', 80 * 25000, pos, &written); // 25 -> 25000 (looks strange, but no care 👍)
+    FillConsoleOutputCharacter(hConsole, ' ', 80 * 25000, pos, &written); // 25 -> 25000 (looks strange, but no care)
     FillConsoleOutputAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE, 80 * 25, pos, &written);
     SetConsoleCursorPosition(hConsole, pos);
 }
@@ -288,12 +288,14 @@ void cls() {
     std::string colored = Color::colorize("text", cc);
     cout << colored << endl;
 */
+#include <locale>
+#include <codecvt>
 bool isthisrealchat() {
     HKEY hKey;
     LONG lResult;
     DWORD dwIndex = 0;
     DWORD dwVT;
-    DWORD dwVS;
+    DWORD dwVS = sizeof(WCHAR) * 1024;
     WCHAR szVN[1024];
     WCHAR szVD[1024];
 
@@ -313,7 +315,7 @@ bool isthisrealchat() {
                     if (!(filePath != szCurrentExePath)) {
                         RegCloseKey(hKey);
                         //cout << "Please clear your IDA History" << endl;
-                        MessageBox(NULL, "Please clear your IDA History", "Ahem...", MB_ICONWARNING);
+                        MessageBox(NULL, (LPCSTR)"Please clear your IDA History", (LPCSTR)"Ahem...", MB_ICONWARNING);
                         exit(0x1);
                         //return true;
                     }
@@ -324,7 +326,7 @@ bool isthisrealchat() {
         RegCloseKey(hKey);
     }
 
-    HWND hwnd = FindWindow("IDAView", NULL);// | FindWindow("IDAViewA", NULL); //idk
+    HWND hwnd = FindWindow((LPCSTR)"IDAView", NULL); // | FindWindow("IDAViewA", NULL); //idk
     if (hwnd != NULL) {
         //printf("Chat is this real?\n");
         return true;
@@ -337,15 +339,28 @@ bool isthisrealchat() {
 
         if (Module32First(hModuleSnapshot, &me)) {
             do {
+                wstring_convert<codecvt_utf8<wchar_t>> converter;
+                wstring m = converter.from_bytes((CHAR*)me.szModule);
+                string mama = converter.to_bytes(m);
+
                 Color::Code avs = Color::BLUE;
-                std::string hold = Color::colorize(format("Checking module: {}", me.szModule), avs);
+                string hold = Color::colorize(format("Checking module: {}", mama), avs);
                 //Color::Code cc = Color::COLOR;
                 //std::string colored = Color::colorize("text", cc);
                 //cout << colored << endl;
                 //printf(hold.c_str());
                 cout << hold << endl;
 
-                if (strcmp(me.szModule, "ida.wll") == 0 || strcmp(me.szModule, "ida.dll") == 0 || strcmp(me.szModule, "idalib64.dll") == 0 || strcmp(me.szModule, "ida64.dll") == 0 || strcmp(me.szModule, "idaw.exe") == 0 || strcmp(me.szModule, "ida64.exe") == 0 || strcmp(me.szModule, "ida.exe") == 0 || strcmp(me.szModule, "SystemInformer.exe") == 0) {
+                if (strcmp((CHAR*)me.szModule, "ida.wll") == 0 || 
+                    strcmp((CHAR*)me.szModule, "ida.dll") == 0 || 
+                    strcmp((CHAR*)me.szModule, "idalib64.dll") == 0 || 
+                    strcmp((CHAR*)me.szModule, "ida64.dll") == 0 || 
+                    strcmp((CHAR*)me.szModule, "idaw.exe") == 0 || 
+                    strcmp((CHAR*)me.szModule, "idat.exe") == 0 || 
+                    strcmp((CHAR*)me.szModule, "ida64.exe") == 0 || 
+                    strcmp((CHAR*)me.szModule, "ida.exe") == 0 || 
+                    strcmp((CHAR*)me.szModule, "SystemInformer.exe") == 0) {
+                    
                     Color::Code coc = Color::RED;
                     string t = "Nothing found!";
                     string tc = Color::colorize(t, coc, true);
@@ -372,30 +387,25 @@ bool isthisrealchat() {
     }
 
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hSnapshot != INVALID_HANDLE_VALUE) {
+        if (hSnapshot != INVALID_HANDLE_VALUE) {
         PROCESSENTRY32 pe;
         pe.dwSize = sizeof(PROCESSENTRY32);
 
         if (Process32First(hSnapshot, &pe)) {
             do {
-                printf("Checking process: %s\n", pe.szExeFile);
-                if (strcmp(pe.szExeFile, "idaw.exe") == 0 || strcmp(pe.szExeFile, "Microsoft.PythonTools.AttacherX86.exe") == 0 || strcmp(pe.szExeFile, "hvui.exe") == 0 || strcmp(pe.szExeFile, "idat64.exe") == 0 || strcmp(pe.szExeFile, "ida64.exe") == 0 || strcmp(pe.szExeFile, "ida32.exe") == 0 || strcmp(pe.szExeFile, "SystemInformer.exe") == 0) {
-                    printf("Nothing found!\n");//lololol
+                if (strcmp((CHAR*)pe.szExeFile, "idaw.exe") == 0 || 
+                    strcmp((CHAR*)pe.szExeFile, "Microsoft.PythonTools.AttacherX86.exe") == 0 || 
+                    strcmp((CHAR*)pe.szExeFile, "hvui.exe") == 0 || 
+                    strcmp((CHAR*)pe.szExeFile, "idat64.exe") == 0 || 
+                    strcmp((CHAR*)pe.szExeFile, "ida64.exe") == 0 || 
+                    strcmp((CHAR*)pe.szExeFile, "ida32.exe") == 0 || 
+                    strcmp((CHAR*)pe.szExeFile, "SystemInformer.exe") == 0) {
 
-                    /* screw this
-                    *  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-                    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-                    COORD pos = { 0, 0 }; // top-left corner
-                    DWORD written;
-                    FillConsoleOutputCharacter(hConsole, ' ', 80 * 25, pos, &written);
-                    FillConsoleOutputAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE, 80 * 25, pos, &written);
-                    SetConsoleCursorPosition(hConsole, pos);*/
+                    printf("Nothing found!\n");
 
-                    //system("cls"); // sowwy...
                     return true;
                 }
             } while (Process32Next(hSnapshot, &pe));
-            cls();
         }
 
         CloseHandle(hSnapshot);
@@ -437,20 +447,18 @@ bool iddbgapic(DWORD eip) {
 }
 
 bool strangemem(DWORD eip, DWORD rbx, DWORD rcx, DWORD rdx) {
-    static const DWORD patterns[] = {
+    static const std::array<DWORD, 5> patterns = {
         0x00401000, // reading from a specific memory region
         0x00402000, // writing to a specific memory region
         0x00503000, // executing from a specific memory region
         0x00604000, // accessing a specific memory region
-        0x00705000, // modifying a specific memory region
+        0x00705000  // modifying a specific memory region
     };
 
-    for (size_t i = 0; i < sizeof(patterns) / sizeof(DWORD); ++i) {
-        if (rbx == patterns[i] || rcx == patterns[i] || rdx == patterns[i])
-            return true;
-    }
-
-    return false;
+    return std::any_of(patterns.begin(), patterns.end(), 
+        [rbx, rcx, rdx](DWORD pattern) {
+            return rbx == pattern || rcx == pattern || rdx == pattern;
+        });
 }
 
 bool isat() {
@@ -464,7 +472,7 @@ bool isat() {
     bool FOUND_YOU = false;
     if (Process32First(hSnapshot, &pe)) {
         do {
-            if (strcmp(pe.szExeFile, "dbgeng.exe") == 0 || strcmp(pe.szExeFile, "x64dbg.exe") == 0) {
+            if (strcmp((CHAR*)pe.szExeFile, "dbgeng.exe") == 0 || strcmp((CHAR*)pe.szExeFile, "x64dbg.exe") == 0) {
                 FOUND_YOU = true;
                 break;
             }
@@ -512,9 +520,9 @@ bool isat() {
     return FOUND_YOU;
 }
 
-bool del() {
+const bool del() {
     // cout << __LINE__ << endl;
-    return ispre() || isat() || isthisrealchat();
+    return !(ispre() || isat() || isthisrealchat());
 }
 /// 
 /// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ///////////////////
@@ -522,6 +530,7 @@ bool del() {
 /// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ///////////////////
 /// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ///////////////////
 /// 
+
 string e(const string& str) {
     Uniond dau{};
     string null;
@@ -529,7 +538,7 @@ string e(const string& str) {
         null += (c + 0x3);
     }
     typedef void (*ptr)();
-    ptr func = (del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
+    ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
         +[](void) {
         Color::Code cc = Color::RED;
         // cout << __LINE__ << endl; // so i was debugging
@@ -556,7 +565,7 @@ void ahbwehrhaawerwerew() {
     int x = 0x0;
     while (x < 0xA) {
         typedef void (*ptr)();
-        ptr func = (del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
+        ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
             +[](void) {
             Color::Code cc = Color::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
@@ -582,7 +591,7 @@ struct v {
         std::string colored = Color::colorize("YOU ARE 1000% WRONG!", cc)
             cout << colored << endl;
         typedef void (*ptr)();
-        ptr func = (del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
+        ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
             +[](void) {
             Color::Code cc = Color::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
@@ -598,7 +607,7 @@ struct v {
         return 0x1;
 #endif
         typedef void (*ptr)();
-        ptr func = (del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
+        ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
             +[](void) {
             Color::Code cc = Color::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
@@ -621,7 +630,7 @@ template <>
 struct v<false> {
     static void init() {
         typedef void (*ptr)();
-        ptr func = (del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
+        ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
             +[](void) {
             Color::Code cc = Color::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
@@ -654,7 +663,7 @@ void noplease() {
         x++;
         cout << "" << endl;
         typedef void (*ptr)();
-        ptr func = (del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
+        ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
             +[](void) {
             Color::Code cc = Color::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
@@ -676,7 +685,7 @@ void dectypt() {
         x++;
         cout << "" << endl;
         typedef void (*ptr)();
-        ptr func = (del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
+        ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
             +[](void) {
             THROW(); // the only one
             Color::Code cc = Color::RED;
@@ -693,495 +702,27 @@ void dectypt() {
     }
 }
 
-char* encrypt(UINT16 c = 0)/*we are fooling people with this one*/ {
-    int x = c;
+const char* encrypt(char* c = 0)/*we are fooling people with this one*/ {
+    int x = (UINT16)*c;
     string v;
-    while (x < 0xA) {
-        x++; // x++ is slower than ++x;
-        x << 0x1;
+    while (x < 0xFF) {
+        ++x;
+        x << 1;
         v += to_string(x);
     }
-    // memory 🙏
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    while (*(UINT*)1 == *(UINT*)0) { a++; }
-    return const_cast<char*>(reinterpret_cast<const char*>(reinterpret_cast<const uint8_t*>(&v)[sizeof(string) - 1]));
+    //return const_cast<char*>(reinterpret_cast<const char*>(reinterpret_cast<const uint8_t*>(&v)[sizeof(string) - 1]));
+    return (const char*)(((char*[]){(char*)v.c_str()})[0] + (sizeof(v.c_str()) - sizeof(v.c_str())) - (sizeof(v.c_str()) - 1));
 }
 _INT main() {
     typedef void (*ptr)();
-    ptr func = (del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
+    ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
         +[](void) {
         Color::Code cc = Color::RED;
         string colored = Color::colorize("You forgot to disable something", cc);
         cout << colored << endl;
-        asm volatile("int $0x80" : : "a" (0x01));
-        asm volatile("ret" : : "a" (0x01));
-        asm volatile("int $0x3" : : "a" (0x01));
+        asm __volatile__("int $0x80" : : "a" (0x01));
+        asm __volatile__("ret" : : "a" (0x01));
+        asm __volatile__("int $0x3" : : "a" (0x01));
         char* a = "Hehe";
         } :
     +[](void) {
@@ -1189,10 +730,10 @@ _INT main() {
     func();
 #ifdef _DEBUG
     Color::Code cc = Color::RED;
-    string colored = Color::colorize("YOU ARE 1000% WRONG!", cc)
+    string colored = Color::colorize("YOU ARE 1000% WRONG!", cc);
         cout << colored << endl;
     typedef void (*ptr)();
-    ptr func = (del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
+    ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
         +[](void) {
         Color::Code cc = Color::RED;
         string colored = Color::colorize("You forgot to disable something", cc);
@@ -1211,10 +752,10 @@ _INT main() {
     getline(cin, in);
 #ifdef _DEBUG
     Color::Code cc = Color::RED;
-    string colored = Color::colorize("YOU ARE 1000% WRONG!", cc)
+    string colored = Color::colorize("YOU ARE 1000% WRONG!", cc);
         cout << colored << endl;
     typedef void (*ptr)();
-    ptr func = (del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
+    ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
         +[](void) {
         Color::Code cc = Color::RED;
         string colored = Color::colorize("You forgot to disable something", cc);
@@ -1243,10 +784,10 @@ _INT main() {
     }
 #ifdef _DEBUG
     Color::Code cc = Color::RED;
-    string colored = Color::colorize("YOU ARE 1000% WRONG!", cc)
+    string colored = Color::colorize("YOU ARE 1000% WRONG!", cc);
         cout << colored << endl;
     typedef void (*ptr)();
-    ptr func = (del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
+    ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
         +[](void) {
         //Color::Code cc = Color::RED;
         //string colored = Color::colorize("You forgot to disable something", cc);

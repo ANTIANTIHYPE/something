@@ -1,5 +1,6 @@
-#ifndef COLOR_HPP
-#define COLOR_HPP
+#pragma once
+
+#include <string>
 
 #ifdef _WIN32
     #define NOMINMAX
@@ -32,5 +33,3 @@ public:
         return ansiCode + text + "\x1B[0m";
     }
 };
-
-#endif  // COLOR_HPP
