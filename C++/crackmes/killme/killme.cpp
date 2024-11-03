@@ -97,13 +97,13 @@
       /* | -fno-strict-aliasing                | */
       /* | -fno-strict-overflow                | */
       /* | -fno-tree-vrp                       | */
-      /* | -O3                                 | */
+      /* | -O1                                 | */
       /* | -Wall                               | */
       /* | -fno-ident                          | */
       /* | -fno-debug-types-section            | */
       /* | -fno-merge-all-constants            | */
       /* | -fno-rtti                           | */
-      /* | -D_FORTIFY_SOURCE=5                 | */
+      /* | -D_FORTIFY_SOURCE=3                 | */
       /* | -fno-stack-protector                | */
       /* | -fno-eliminate-unused-debug-types   | */
       /* | -fno-eliminate-unused-debug-symbols | */
@@ -530,12 +530,14 @@ const bool del() {
 /// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ///////////////////
 /// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ///////////////////
 /// 
-
+int xmin = 1;
+int xmax = 20;
 string e(const string& str) {
-    Uniond dau{};
+    //Uniond dau{};
     string null;
+    srand((unsigned int)time(NULL));
     for (char c : str) {
-        null += (c + 0x3);
+        null += (c + xmin + (rand() % (xmax - xmin + 1)));
     }
     typedef void (*ptr)();
     ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
@@ -553,11 +555,11 @@ string e(const string& str) {
     +[](void) {
         };
     func();
-    return null + "" + "" + "0x0";
+    return null + "0x0";
 }
 
-const string x = e("\u0068\u0065\u006C\u006C\u006F\u0020\u003A\u0033");
-const string ei = "\u0061\u0062\u0063\u0064\u0065\u0066\u0067\u0068\u0069\u006A\u006B\u006C\u006D\u006E\u006F\u0070\u0071\u0072\u0073\u0074\u0075\u0076\u0077\u0078\u0079\u007A\u0041\u0042\u0043\u0044\u0045\u0046\u0047\u0048\u0049\u004A\u004B\u004C\u004D\u004E\u004F\u0050\u0051\u0052\u0053\u0054\u0055\u0056\u0057\u0058\u0059\u005A\u0030\u0031\u0032\u0033\u0034\u0035\u0036\u0037\u0038\u0039";
+const string x = e("\u0068\u0065\u006C\u006C\u006F\u0020\u003A\u0033"); // no >:(
+const string ei = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*()-=_+[];'\\\",./<>?{}�";
 string in;
 _INT a = 0x0;
 void ahbwehrhaawerwerew() {
@@ -659,8 +661,9 @@ void fiuter() {
 
 void noplease() {
     int x = 0;
-    while (x < 0xA) {
-        x++;
+    while (x < 0xFF) {
+        ++x;
+        fiuter();
         cout << "" << endl;
         typedef void (*ptr)();
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
@@ -688,6 +691,9 @@ void dectypt() {
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
             +[](void) {
             THROW(); // the only one
+            THROW(); // the only second
+            THROW(); // the only third
+            THROW(); // the only fourth
             Color::Code cc = Color::RED;
             std::string colored = Color::colorize("Hello :)", cc);
             cout << colored << endl;
@@ -702,7 +708,7 @@ void dectypt() {
     }
 }
 
-const char* encrypt(char* c = 0)/*we are fooling people with this one*/ {
+const char* encrypt(char* c = 0)/*we NOT are fooling people with this one*/ {
     int x = (UINT16)*c;
     string v;
     while (x < 0xFF) {
@@ -748,7 +754,7 @@ _INT main() {
     func();
     return 0x1;
 #endif
-    cout << "\u0045\u006E\u0074\u0065\u0072\u0020\u0070\u0061\u0073\u0073\u0077\u006F\u0072\u0064\u003A\u0020";
+    cout << "Enter password: ";
     getline(cin, in);
 #ifdef _DEBUG
     Color::Code cc = Color::RED;
@@ -772,10 +778,10 @@ _INT main() {
 #endif
     //if ((in.size() < 8) || ((in.find_first_not_of(ei) != string::npos))) {
     //if ((((((in.size() << 3) - 56) >> 3) < 0) || ((in.find_first_not_of(ei) != string::npos)))) {
-    auto death = ((in.size() < 8) || (in.find_first_not_of(ei) != string::npos));
+    bool death = (in.find_first_not_of(ei) != string::npos);
     switch (death) {
-    case true:
-        cout << "\u0049\u006E\u0076\u0061\u006C\u0069\u0064\u0020\u0069\u006E\u0070\u0075\u0074\u002E\u0020\u0050\u0061\u0073\u0073\u0077\u006F\u0072\u0064\u0020\u006D\u0075\u0073\u0074\u0020\u0062\u0065\u0020\u0061\u0074\u0020\u006C\u0065\u0061\u0073\u0074\u0020\u0038\u0020\u0063\u0068\u0061\u0072\u0061\u0063\u0074\u0065\u0072\u0073\u0020\u006C\u006F\u006E\u0067\u0020\u0061\u006E\u0064\u0020\u0063\u006F\u006E\u0074\u0061\u0069\u006E\u0020\u006F\u006E\u006C\u0079\u0020\u0061\u006C\u0070\u0068\u0061\u006E\u0075\u006D\u0065\u0072\u0069\u0063\u0020\u0063\u0068\u0061\u0072\u0061\u0063\u0074\u0065\u0072\u0073\u002E" << endl;
+    case true://                         VVVVVVVVVVVVVVVV this is a lie btw
+        cout << "Invalid input. Password must be at least 8 characters long and contain only alphanumeric characters." << endl;
         return 0x1;
         func();
         //break;
@@ -804,7 +810,7 @@ _INT main() {
 #endif
     //if ((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) {
     static const BOOL cond = (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x));
-    static const auto con = (cond && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)));
+    static const BOOL con = (cond && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)));
     /*if (!(!!cond && exit)) // this is broken
         v<!!(bool)true>::init();
     else
@@ -815,9 +821,9 @@ _INT main() {
         v<!false> v_obj;
         v_obj.init();
     }
-    else if (eval_cond(con, exit) && vmd.checkVM()) {
-        printf("... I am aware that I am VM-phobic, so I won't accept your answer. Sorry lol get rekt noob\n");
-        exit(666);
+    else if (vmd.checkVM()) {
+        printf("...I am VM-phobic, so I won't even bother checking your password sorry lol get rekt noob >:)\n");
+        __fastfail(666);
     }
     else if (!eval_cond(con, exit)/* && (!vmd.checkVM() || vmd.checkVM())*/) { // <- vm checking here makes NO sense
         //printf(vmd.checkVM()"\n");
@@ -827,8 +833,8 @@ _INT main() {
     }
     else {
         printf("what. how did you get here\n");
-        return 0x1;
+        return 1;
     }
 
-    return 0x0;
+    return 0;
 }
