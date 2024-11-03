@@ -1,0 +1,43 @@
+name: Upload to Discord
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - master
+
+jobs:
+  upload:
+    name: Upload release to Discord
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get commit messages
+        id: commit
+        run: |
+          echo "commit-message=$(git log -1 --pretty=format:"%s" | head -n 1)" >> $GITHUB_OUTPUT
+          echo "commit-message-full=$(git log -1 --pretty=format:"%B" | tail -n +2)" >> $GITHUB_OUTPUT
+          echo "short-commit-hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "commit-diff=$(git diff HEAD^ HEAD --num-stat || echo 'No changes')" >> $GITHUB_OUTPUT
+          echo "build-color=#$(git log -1 --pretty=format:"%h" | cut -c 1-6)" >> $GITHUB_OUTPUT
+
+      - name: Debug commit messages
+        run: |
+          echo "commit-diff=$(commit-diff)"
+
+      - uses: prevter/discord-webhook@main
+        with:
+          webhook-url: ${{ secrets.WEBHOOK }}
+          content: |
+            # [#${{ steps.commit.outputs.short-commit-hash }}](${{ github.event.repository.html_url }}/commit/${{ steps.commit.outputs.short-commit-hash }})
+            ${{ steps.commit.outputs.commit-diff }}
+          embed-title: ${{ steps.commit.outputs.commit-message }}
+          embed-description: ${{ steps.commit.outputs.commit-message-full }}
+          embed-color: ${{ steps.commit.outputs.build-color }}
+          embed-url: ${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}
+          embed-author: ${{ github.actor }}
+          embed-author-icon: 'https://avatars.githubusercontent.com/u/${{ github.actor_id }}?v=4'
+          embed-timestamp: 'now'
+          debug-print: true

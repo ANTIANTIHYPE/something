@@ -1,0 +1,149 @@
+
+@importtheme "_base";
+
+CustomIDAMemo
+{
+    qproperty-line-fg-default                     : rgb(253, 150, 228);        /* Default                                       */
+    qproperty-line-fg-regular-comment             : rgb(253, 150, 228);        /* Regular comment                               */
+    qproperty-line-fg-repeatable-comment          : rgb(196, 146, 183);        /* Repeatable commen                             */
+    qproperty-line-fg-automatic-comment           : rgb(196, 146, 183);        /* Automatic comment                             */
+    qproperty-line-fg-insn                        : rgb(160, 096, 144);        /* Instruction                                   */
+    qproperty-line-fg-dummy-data-name             : rgb(160, 096, 144);        /* Dummy Data Name                               */
+    qproperty-line-fg-regular-data-name           : rgb(253, 150, 228);        /* Regular Data Name                             */
+    qproperty-line-fg-demangled-name              : rgb(253, 150, 228);        /* Demangled Name                                */
+    qproperty-line-fg-punctuation                 : rgb(160, 096, 144);        /* Punctuation                                   */
+    qproperty-line-fg-charlit-in-insn             : rgb(248, 141, 186);        /* Char constant                                 */
+    qproperty-line-fg-strlit-in-insn              : rgb(255, 121, 175);        /* String constant                               */
+    qproperty-line-fg-numlit-in-insn              : rgb(248, 141, 186);        /* Numeric constant                              */
+    qproperty-line-fg-void-opnd                   : rgb(255, 094, 158);        /* Void operand                                  */
+    qproperty-line-fg-code-xref                   : rgb(223, 179, 197);        /* Code reference                                */
+    qproperty-line-fg-data-xref                   : rgb(212, 164, 212);        /* Data reference                                */
+    qproperty-line-fg-code-xref-to-tail           : rgb(255, 000, 106);        /* Code reference to tail byte                   */
+    qproperty-line-fg-data-xref-to-tail           : rgb(173, 110, 136);        /* Data reference to tail byte                   */
+    qproperty-line-fg-error                       : rgb(001, 001, 001);        /* Error or problem                              */
+    qproperty-line-fg-line-prefix                 : rgb(141, 141, 141);        /* Line prefix                                   */
+    qproperty-line-fg-opcode-byte                 : rgb(253, 150, 228);        /* Opcode bytes                                  */
+    qproperty-line-fg-extra-line                  : rgb(253, 150, 228);        /* Extra line                                    */
+    qproperty-line-fg-alt-opnd                    : rgb(253, 150, 228);        /* Alternative operand                           */
+    qproperty-line-fg-hidden                      : rgb(196, 146, 183);        /* Hidden name                                   */
+    qproperty-line-fg-libfunc                     : rgb(237, 183, 237);        /* Library function name                         */
+    qproperty-line-fg-locvar                      : rgb(248, 141, 186);        /* Local variable name                           */
+    qproperty-line-fg-dummy-code-name             : rgb(160, 096, 144);        /* Dummy code name                               */
+    qproperty-line-fg-asm-directive               : rgb(253, 150, 228);        /* Assembler directive                           */
+    qproperty-line-fg-macro                       : rgb(194, 153, 184);        /* Macro                                         */
+    qproperty-line-fg-strlit-in-data              : rgb(248, 141, 186);        /* String constant in data directive             */
+    qproperty-line-fg-charlit-in-data             : rgb(248, 141, 186);        /* Char constant in data directive               */
+    qproperty-line-fg-numlit-in-data              : rgb(248, 160, 200);        /* Numeric constant in data directive            */
+    qproperty-line-fg-keyword                     : rgb(160, 096, 144);        /* Keywords (offset, byte ptr, near)             */
+    qproperty-line-fg-register-name               : rgb(160, 096, 144);        /* Register name                                 */
+    qproperty-line-fg-import-name                 : rgb(255, 000, 255);        /* Imported name                                 */
+    qproperty-line-fg-segment-name                : rgb(173, 110, 136);        /* Segment name                                  */
+    qproperty-line-fg-dummy-unknown-name          : rgb(160, 096, 144);        /* Dummy unknown name                            */
+    qproperty-line-fg-code-name                   : rgb(253, 150, 228);        /* Regular Code Name                             */
+    qproperty-line-fg-unknown-name                : rgb(160, 096, 144);        /* Regular Unknown Name                          */
+    qproperty-line-fg-collapsed-line              : rgb(253, 150, 228);        /* Collapsed line                                */
+    qproperty-line-bg-default                     : rgb(255, 206, 224);        /* Default background                            */
+    qproperty-line-bg-selected                    : rgb(218, 176, 191);        /* Selected background                           */
+    qproperty-line-pfx-libfunc                    : rgb(235, 143, 177);        /* Line prefix: Library function                 */
+    qproperty-line-pfx-func                       : rgb(255, 000, 098);        /* Line prefix: Regular function                 */
+    qproperty-line-pfx-insn                       : rgb(187, 000, 072);        /* Line prefix: Single instruction               */
+    qproperty-line-pfx-data                       : rgb(196, 146, 183);        /* Line prefix: Data bytes                       */
+    qproperty-line-pfx-unexplored                 : rgb(173, 110, 136);        /* Line prefix: Unexplored byte                  */
+    qproperty-line-pfx-extern                     : rgb(255, 000, 255);        /* Line prefix: External name definition segment */
+    qproperty-line-pfx-current-line               : rgb(253, 150, 228);        /* Line prefix: Current line                     */
+    qproperty-line-pfx-current-item               : rgb(238, 125, 210);        /* Line prefix: Current item                     */
+    qproperty-line-pfx-hidden-line                : rgb(148, 000, 057);        /* Line prefix: Hidden line                      */
+    qproperty-line-pfx-lumina                     : rgb(223, 69, 128);         /* Line prefix: Lumina                           */
+}
+
+@def dark_highlight_color rgba(96, 00, 96, 0.80);
+
+CustomIDAMemo[os-dark-theme="true"]
+{
+    border: none;
+
+    /* this isn't correct btw */
+    qproperty-line-fg-default                     : rgb(253, 150, 228);        /* Default                                       */
+    qproperty-line-fg-regular-comment             : rgb(253, 150, 228);        /* Regular comment                               */
+    qproperty-line-fg-repeatable-comment          : rgb(196, 146, 183);        /* Repeatable commen                             */
+    qproperty-line-fg-automatic-comment           : rgb(196, 146, 183);        /* Automatic comment                             */
+    qproperty-line-fg-insn                        : rgb(212, 180, 204);        /* Instruction                                   */
+    qproperty-line-fg-dummy-data-name             : rgb(160, 096, 144);        /* Dummy Data Name                               */
+    qproperty-line-fg-regular-data-name           : rgb(253, 150, 228);        /* Regular Data Name                             */
+    /* to be continued */
+    qproperty-line-fg-demangled-name: #ffecbb;
+    qproperty-line-fg-punctuation: #c0c0c0;
+    qproperty-line-fg-charlit-in-insn: #69d200;
+    qproperty-line-fg-strlit-in-insn: #00ff00;
+    qproperty-line-fg-numlit-in-insn: #d25032;
+    qproperty-line-fg-void-opnd: #ff4646;
+    qproperty-line-fg-code-xref: #ffaa7f;
+    qproperty-line-fg-data-xref: #7c7c61;
+    qproperty-line-fg-code-xref-to-tail: #d25032;
+    qproperty-line-fg-data-xref-to-tail: #808000;
+    qproperty-line-fg-error: #ff3437;
+    qproperty-line-fg-line-prefix: #c0c0c0;
+    qproperty-line-fg-opcode-byte: #595959;
+    qproperty-line-fg-extra-line: #ffc5f3;
+    qproperty-line-fg-alt-opnd: #ffaaff;
+    qproperty-line-fg-hidden: #ffd200;
+    qproperty-line-fg-libfunc: #00ffff;
+    qproperty-line-fg-locvar: #ff8000;
+    qproperty-line-fg-dummy-code-name: #ffd200;
+    qproperty-line-fg-asm-directive: #9dd600;
+    qproperty-line-fg-macro: #df077e;
+    qproperty-line-fg-strlit-in-data: #69d200;
+    qproperty-line-fg-charlit-in-data: #79f300;
+    qproperty-line-fg-numlit-in-data: #d25032;
+    qproperty-line-fg-keyword: #ababab;
+    qproperty-line-fg-register-name: #73adad;
+    qproperty-line-fg-import-name: #ff5afd;
+    qproperty-line-fg-segment-name: #ffff7f;
+    qproperty-line-fg-dummy-unknown-name: #aaff00;
+    qproperty-line-fg-code-name: #ffd200;
+    qproperty-line-fg-unknown-name: #ffaaff;
+    qproperty-line-fg-collapsed-line: #ffff00;
+    qproperty-line-bg-default: #2d2d2d;
+    qproperty-line-bg-selected: #e1ad32;
+    qproperty-line-pfx-libfunc: #00ffff;
+    qproperty-line-pfx-func: #666666;
+    qproperty-line-pfx-insn: #aa0000;
+    qproperty-line-pfx-data: #7c7c61;
+    qproperty-line-pfx-unexplored: #9d9d00;
+    qproperty-line-pfx-extern: #ff55ff;
+    qproperty-line-pfx-current-line: #ffaa00;
+    qproperty-line-pfx-lumina: #32cd32;
+    qproperty-graph-bg-top: #b2b2b2;
+    qproperty-graph-bg-bottom: #b2b2b2;
+    qproperty-graph-node-title-normal: #f5f5f5;
+    qproperty-graph-node-title-selected: #aa9f98;
+    qproperty-graph-node-title-current: #5e5854;
+    qproperty-graph-node-frame-group: #ffff00;
+    qproperty-graph-node-shadow: #242424;
+    qproperty-graph-node-high1: #003900;
+    qproperty-graph-node-high2: #6d0000;
+    qproperty-graph-node-foreign: #ff0000;
+    qproperty-graph-edge-normal: #0043cb;
+    qproperty-graph-edge-yes: #009100;
+    qproperty-graph-edge-no: #bc0000;
+    qproperty-graph-edge-high: #c68e00;
+    qproperty-graph-edge-selected: #aa5500; /* brown-ish */
+    qproperty-graph-node-frame-selected: #aa5500;   /* brown-ish */
+    qproperty-line-fg-patched-bytes: #804040;
+    qproperty-line-fg-unsaved-changes: #ff8000;
+    qproperty-line-bg-highlight: ${dark_highlight_color};
+    qproperty-line-bg-bpt-enabled: #760000;
+    qproperty-line-bg-bpt-disabled: #00ff00;
+    qproperty-line-bg-bpt-unavailable: #ff8000;
+    qproperty-bookmark-star-outline: white;
+}
+
+CustomIDAMemo[os-dark-theme="true"][hints="true"]
+{
+    qproperty-line-bg-default: #424242;
+}
+
+CustomIDAMemo[os-dark-theme="true"][debugging="true"]
+{
+    qproperty-line-bg-default: #4D4D4D;
+}
