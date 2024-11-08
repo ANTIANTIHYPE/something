@@ -530,8 +530,10 @@ const bool del() {
 /// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ///////////////////
 /// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ///////////////////
 /// 
-int xmin = 1;
-int xmax = 20;
+
+// i fogot that we are adding these numbers to the null string
+int xmin = -2;
+int xmax = 6;
 string e(const string& str) {
     //Uniond dau{};
     string null;
@@ -817,13 +819,13 @@ _INT main() {
         v<!!(bool)false>::init();
     */
     VMD vmd;
+    if (vmd.checkVM()) {
+        printf("I am VM-phobic, so I won't even bother checking your password sorry lol get rekt noob >:)\n");
+        __fastfail(666);
+    }
     if (eval_cond(con, exit) && !vmd.checkVM()) {
         v<!false> v_obj;
         v_obj.init();
-    }
-    else if (vmd.checkVM()) {
-        printf("...I am VM-phobic, so I won't even bother checking your password sorry lol get rekt noob >:)\n");
-        __fastfail(666);
     }
     else if (!eval_cond(con, exit)/* && (!vmd.checkVM() || vmd.checkVM())*/) { // <- vm checking here makes NO sense
         //printf(vmd.checkVM()"\n");
@@ -832,8 +834,8 @@ _INT main() {
         //cout << vmd.checkVM() << endl; // successfully debugged
     }
     else {
-        printf("what. how did you get here\n");
-        return 1;
+        printf("how did you get here\n");
+        __fastfail(616);
     }
 
     return 0;

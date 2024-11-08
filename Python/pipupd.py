@@ -61,7 +61,6 @@ class App(QWidget):
         for package_name, old_version, new_version in outdated:
             item = QListWidgetItem(f"{package_name} - ", self.list_widget)
             item.setText(f"{package_name} - {old_version} -> {new_version}")
-#            item.setForeground(QColor("red"))
 
     def update_all_packages(self):
         outdated = get_outdated()
@@ -72,6 +71,7 @@ class App(QWidget):
 #                print(f"Successfully updated {package_name}")
             except subprocess.CalledProcessError as e:
                 print(f"Failed to update {package_name}: {e}")
+        self.populate_outdated()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
