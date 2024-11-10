@@ -1,7 +1,7 @@
-import sys, subprocess
+import sys
+import subprocess
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton
-from PyQt6.QtGui import QColor
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
 
 def get_outdated():
     outdated = list()
@@ -34,6 +34,22 @@ def get_outdated():
 
     return outdated
 
+class PackageUpdater(QThread):
+    update_finished = pyqtSignal(str)
+
+    def __init__(self, packages):
+        super().__init__()
+        self.packages = packages
+
+    def run(self):
+        for package_name in self.packages:
+            print(f"Updating {package_name}...")
+            try:
+                subprocess.run(['pip', 'install', '--upgrade', package_name], check=True)
+                self.update_finished.emit(package_name)  # Emit signal when update is successful
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to update {package_name}: {e}")
+
 class App(QWidget):
     def __init__(self):
         super().__init__()
@@ -57,21 +73,25 @@ class App(QWidget):
         self.populate_outdated()
 
     def populate_outdated(self):
+        self.list_widget.clear()
         outdated = get_outdated()
+        self.outdated_packages = list()
+
         for package_name, old_version, new_version in outdated:
-            item = QListWidgetItem(f"{package_name} - ", self.list_widget)
-            item.setText(f"{package_name} - {old_version} -> {new_version}")
+            item = QListWidgetItem(f"{package_name} - {old_version} -> {new_version}", self.list_widget)
+            self.outdated_packages.append(package_name)
 
     def update_all_packages(self):
-        outdated = get_outdated()
-        for package_name, _, _ in outdated:
-            print(f"Updating {package_name}...")
-            try:
-                subprocess.run(['pip', 'install', '--upgrade', package_name], check=True)
-#                print(f"Successfully updated {package_name}")
-            except subprocess.CalledProcessError as e:
-                print(f"Failed to update {package_name}: {e}")
-        self.populate_outdated()
+        self.thread = PackageUpdater(self.outdated_packages)
+        self.thread.update_finished.connect(self.remove_package_item)
+        self.thread.start()
+
+    def remove_package_item(self, package_name):
+        for index in range(self.list_widget.count()):
+            item = self.list_widget.item(index)
+            if package_name in item.text():
+                self.list_widget.takeItem(index)
+                break
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
