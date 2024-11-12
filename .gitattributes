@@ -3,3 +3,5 @@
 *.jpg   binary
 *.png   binary
 *.gif   binary
+
+Assembly/aesdec.s linguist-language=asm
