@@ -1,3 +1,6 @@
+;; this file initially consisted of way too much description
+
+
 section .data
     ; const uint8_t SBOX[256]   // yeah i messed up initially
     sbox:   db 0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5
@@ -41,16 +44,13 @@ aesdec:
     ; rsi - key (const uint8_t*)
     ; rdx - output (uint8_t*)
 
-    mov rax, rsi                ; Load key pointer
-    mov rbx, rdi                ; Load ciphertext pointer
-    mov rcx, rdx                ; Load output pointer
+    mov rax, rsi
+    mov rbx, rdi
+    mov rcx, rdx
 
-    ; AddRoundKey (initial round)
     call AddRoundKey
 
-    ; 9 rounds of AES decryption
-    mov rcx, 9                  ; Number of rounds
-
+    mov rcx, 9
 round_loop:
     call InvShiftRows
     call InvSubBytes
@@ -67,8 +67,6 @@ round_loop:
     ret
 
 AddRoundKey:
-    ; Implementation of AddRoundKey
-    ; XOR the state with the round key
     ; Assume state is in rbx and key in rax
     mov rdx, 16                 ; AES block size
 add_loop:
@@ -81,8 +79,6 @@ add_loop:
     ret
 
 InvSubBytes:
-    ; Implementation of InvSubBytes
-    ; Substitute bytes using the inverse S-box
     mov rdx, 16                 ; AES block size
 sub_bytes_loop:
     mov al, [rbx]               ; Load byte from state
@@ -117,10 +113,10 @@ InvShiftRows:
     mov [rbx + 7], al          ; state[1][3] = state[1][0]
 
     ; Shift Row 2 (bytes 8, 9, A, B)
-    mov al, [rbx + 8]          ; Load state[2][0]
-    mov bl, [rbx + 9]          ; Load state[2][1]
-    mov cl, [rbx + 10]         ; Load state[2][2]
-    mov dl, [rbx + 11]         ; Load state[2][3]
+    mov al, [rbx + 8]
+    mov bl, [rbx + 9]
+    mov cl, [rbx + 10]
+    mov dl, [rbx + 11]
 
     mov [rbx + 8], cl          ; state[2][0] = state[2][2]
     mov [rbx + 9], dl          ; state[2][1] = state[2][3]
@@ -128,10 +124,10 @@ InvShiftRows:
     mov [rbx + 11], bl         ; state[2][3] = state[2][1]
 
     ; Shift Row 3 (bytes C, D, E, F)
-    mov al, [rbx + 12]         ; Load state[3][0]
-    mov bl, [rbx + 13]         ; Load state[3][1]
-    mov cl, [rbx + 14]         ; Load state[3][2]
-    mov dl, [rbx + 15]         ; Load state[3][3]
+    mov al, [rbx + 12]
+    mov bl, [rbx + 13]
+    mov cl, [rbx + 14]
+    mov dl, [rbx + 15]
 
     mov [rbx + 12], dl         ; state[3][0] = state[3][3]
     mov [rbx + 13], al         ; state[3][1] = state[3][0]
@@ -139,10 +135,6 @@ InvShiftRows:
     mov [rbx + 15], cl         ; state[3][3] = state[3][2]
 
     ret
-
-; InvMixColumns function
-; This function performs the inverse mix columns operation on the state.
-; The state is assumed to be in the rbx register, which points to the first byte of the state array.
 
 InvMixColumns:
     ; Each column is processed independently
@@ -152,9 +144,8 @@ InvMixColumns:
     ; 8  9  A  B
     ; C  D  E  F
 
-    ; Temporary registers for intermediate results
-    xor rax, rax                ; Clear rax
-    xor rdx, rdx                ; Clear rdx
+    xor rax, rax
+    xor rdx, rdx
 
     ; Process each column
     mov rdi, rbx                ; rdi points to the first byte of the state
@@ -177,32 +168,28 @@ InvMixColumns:
 
     ret
 
-; InvMixColumn function processes one column of the state
 InvMixColumn:
     ; Inputs: rdi points to the first byte of the column
     ; Output: results are stored back in the same location
 
-    ; Load the column bytes into registers
-    mov al, [rdi]                ; Load byte 0
-    mov bl, [rdi + 4]            ; Load byte 1
-    mov cl, [rdi + 8]            ; Load byte 2
-    mov dl, [rdi + 12]           ; Load byte 3
+    mov al, [rdi]
+    mov bl, [rdi + 4]
+    mov cl, [rdi + 8]
+    mov dl, [rdi + 12]
 
     ; Perform the inverse mix columns operation
-    ; Using the inverse mix column matrix:
+    ; using the inverse mix column matrix:
     ; | 0x0E 0x0B 0x0D 0x09 |
     ; | 0x09 0x0E 0x0B 0x0D |
     ; | 0x0D 0x09 0x0E 0x0B |
     ; | 0x0B 0x0D 0x09 0x0E |
 
     ; Calculate the new values
-    ; Result = 0x0E * a + 0x0B * b + 0x0D * c + 0x09 * d
-    ; Implementing the multiplication in GF(2^8) requires using XOR for addition
-    ; and pre-calculated values for multiplication.
+    ; result = 0x0E * a + 0x0B * b + 0x0D * c + 0x09 * d
 
     ; Temporary variables for results
-    xor rax, rax                ; Clear rax for the result
-    xor rdx, rdx                ; Clear rdx for the result
+    xor rax, rax
+    xor rdx, rdx
 
     ; Multiply and sum for the first byte
     call GFMul                  ; Multiply by 0x0E
@@ -217,7 +204,7 @@ InvMixColumn:
     mov [rdi], r8               ; Store result back in the first byte
 
     ; Repeat for the second byte
-    xor rax, rax                ; Clear rax for the result
+    xor rax, rax
     call GFMul                  ; Multiply by 0x0E
     mov r8, rax                 ; Store result in r8
     call GFMul                  ; Multiply by 0x0B
@@ -230,7 +217,7 @@ InvMixColumn:
     mov [rdi + 4], r8           ; Store result back in the second byte
 
     ; Repeat for the third byte
-    xor rax, rax                ; Clear rax for the result
+    xor rax, rax
     call GFMul                  ; Multiply by 0x0E
     mov r8, rax                 ; Store result in r8
     call GFMul                  ; Multiply by 0x0B
@@ -243,7 +230,7 @@ InvMixColumn:
     mov [rdi + 8], r8           ; Store result back in the third byte
 
     ; Repeat for the fourth byte
-    xor rax, rax                ; Clear rax for the result
+    xor rax, rax
     call GFMul                  ; Multiply by 0x0E
     mov r8, rax                 ; Store result in r8
     call GFMul                  ; Multiply by 0x0B
@@ -257,12 +244,14 @@ InvMixColumn:
 
     ret
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ; GFMul function multiplies a byte by a constant in GF(2^8)
 ; Inputs: 
-;   rax = byte to multiply (input)
-;   rdi = constant to multiply by (input)
+;   rax = byte to multiply
+;   rdi = constant to multiply by
 ; Output: 
-;   rax = result of multiplication (output)
+;   rax = result of multiplication
 
 GFMul:
     xor rbx, rbx                ; Clear rbx for the result
@@ -272,34 +261,26 @@ GFMul_Loop:
     test rax, 1                 ; Check if the least significant bit of the byte is set
     jz GFMul_NoAdd              ; If not set, skip addition
 
-    ; Add the current result with the constant
     xor rbx, rdi                ; XOR with the constant
 
 GFMul_NoAdd:
-    ; Shift the byte to the right
     shr rax, 1                  ; Shift the byte right
-    ; Check if the constant is greater than 0x80
     mov rdx, rdi                ; Copy constant to rdx
     and rdx, 0x80               ; Isolate the highest bit
     jz GFMul_Next               ; If not set, just shift the constant
 
-    ; If the highest bit is set, reduce the constant
     xor rdi, 0x1b              ; XOR with the irreducible polynomial
 
 GFMul_Next:
-    ; Shift the constant to the left
     shl rdi, 1                  ; Shift the constant left
-    ; Check if the constant overflows
     test rdx, rdx               ; Check if the highest bit was set
     jnz GFMul_Overflow          ; If it was, we need to reduce
 
-    ; Continue the loop
     loop GFMul_Loop             ; Decrement rcx and loop if not zero
     mov rax, rbx                ; Move the result into rax
     ret
 
 GFMul_Overflow:
-    ; Reduce the constant if it overflows
     shr rdi, 1                  ; Shift right to reduce
     xor rdi, 0x1b               ; XOR with the irreducible polynomial
     mov rax, rbx                ; Move the result into rax
