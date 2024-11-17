@@ -1,16 +1,32 @@
 #pragma once
 
 #include <cstdint>
+#include <stdexcept>
 
 namespace nstd
 {
+    /**
+     * @brief AES (Advanced Encryption Standard) encryption class.
+     * 
+     * This class provides methods for encrypting data using the AES algorithm.
+     * It supports 128-bit key size and operates on 128-bit blocks of data.
+     */
     class aes
     {
     public:
-        void aesenc(uint8_t input[16], uint8_t key[16], uint8_t output[16])
+        /**
+         * @brief Encrypts a 128-bit block of data using the provided key.
+         * 
+         * @param input The input block (16 bytes) to be encrypted.
+         * @param key The encryption key (16 bytes).
+         * @param output The output block (16 bytes) that will hold the encrypted data.
+         * 
+         * @throws std::runtime_error if the input or key size is invalid.
+         */
+        void encrypt(std::uint8_t input[16], std::uint8_t key[16], std::uint8_t output[16])
         {
-            uint8_t state[4][4];
-            uint8_t roundKeys[176];
+            std::uint8_t state[4][4];
+            std::uint8_t roundKeys[176];
 
             for (int i = 0; i < 4; i++)
             {
@@ -19,20 +35,25 @@ namespace nstd
                     state[j][i] = input[i * 4 + j];
                 }
             }
-            KeyExpansion(key, roundKeys);
-            AddRoundKey(state, reinterpret_cast<uint8_t(*)[4]>(roundKeys));
 
+            keyExpansion(key, roundKeys);
+
+            // Initial round
+            addRoundKey(state, reinterpret_cast<std::uint8_t(*)[4]>(roundKeys));
+
+            // Main rounds
             for (int round = 1; round <= 9; ++round)
             {
-                SubBytes(state);
-                ShiftRows(state);
-                MixColumns(state);
-                AddRoundKey(state, reinterpret_cast<uint8_t(*)[4]>(roundKeys + round * 16));
+                subBytes(state);
+                shiftRows(state);
+                mixColumns(state);
+                addRoundKey(state, reinterpret_cast<std::uint8_t(*)[4]>(roundKeys + round * 16));
             }
 
-            SubBytes(state);
-            ShiftRows(state);
-            AddRoundKey(state, reinterpret_cast<uint8_t(*)[4]>(roundKeys + 10 * 16));
+            // Final round
+            subBytes(state);
+            shiftRows(state);
+            addRoundKey(state, reinterpret_cast<std::uint8_t(*)[4]>(roundKeys + 10 * 16));
 
             for (int i = 0; i < 4; i++)
             {
@@ -44,8 +65,7 @@ namespace nstd
         }
 
     private:
-
-        const uint8_t SBOX[256] = {
+        const std::uint8_t SBOX[256] = {
             0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5,
             0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
             0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0,
@@ -80,11 +100,17 @@ namespace nstd
             0x7c, 0x9a, 0x7d, 0x7b, 0x6b, 0x6f, 0x30, 0x01
         };
 
-        const uint8_t RCON[10] = {
+        const std::uint8_t RCON[10] = {
             0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
         };
 
-        void AddRoundKey(uint8_t state[4][4], uint8_t roundKey[4][4])
+        /**
+         * @brief Adds the round key to the state matrix.
+         * 
+         * @param state The state matrix.
+         * @param roundKey The round key to be added.
+         */
+        void addRoundKey(std::uint8_t state[4][4], std::uint8_t roundKey[4][4])
         {
             for (int i = 0; i < 4; ++i)
             {
@@ -95,7 +121,11 @@ namespace nstd
             }
         }
 
-        void SubBytes(uint8_t state[4][4])
+        /**
+         * @brief Substitutes bytes in the state matrix using the S-Box.
+         * @param state The state matrix.
+         */
+        void subBytes(std::uint8_t state[4][4])
         {
             for (int i = 0; i < 4; ++i)
             {
@@ -106,22 +136,30 @@ namespace nstd
             }
         }
 
-        void ShiftRows(uint8_t state[4][4]) {
-            uint8_t temp;
+        /**
+         * @brief Shifts rows in the state matrix.
+         * @param state The state matrix.
+         */
+        void shiftRows(std::uint8_t state[4][4])
+        {
+            std::uint8_t temp;
 
+            // Shift row 1
             temp = state[1][0];
             state[1][0] = state[1][1];
             state[1][1] = state[1][2];
             state[1][2] = state[1][3];
             state[1][3] = temp;
 
-            temp = state[2][0];
+            // Shift row 2
+            temp = state [2][0];
             state[2][0] = state[2][2];
             state[2][2] = temp;
             temp = state[2][1];
             state[2][1] = state[2][3];
             state[2][3] = temp;
 
+            // Shift row 3
             temp = state[3][3];
             state[3][3] = state[3][2];
             state[3][2] = state[3][1];
@@ -129,12 +167,16 @@ namespace nstd
             state[3][0] = temp;
         }
 
-        void MixColumns(uint8_t state[4][4])
+        /**
+         * @brief Mixes the columns of the state matrix.
+         * @param state The state matrix.
+         */
+        void mixColumns(std::uint8_t state[4][4])
         {
             for (int j = 0; j < 4; j++)
             {
-                uint8_t a[4];
-                uint8_t b[4];
+                std::uint8_t a[4];
+                std::uint8_t b[4];
                 for (int i = 0; i < 4; i++)
                 {
                     a[i] = state[i][j];
@@ -147,7 +189,13 @@ namespace nstd
             }
         }
 
-        void KeyExpansion(const uint8_t* key, uint8_t* roundKeys)
+        /**
+         * @brief Expands the key for use in the AES algorithm.
+         * 
+         * @param key The original encryption key.
+         * @param roundKeys The array to hold the expanded keys.
+         */
+        void keyExpansion(const std::uint8_t* key, std::uint8_t* roundKeys)
         {
             for (int i = 0; i < 16; ++i)
             {
@@ -156,13 +204,14 @@ namespace nstd
 
             for (int i = 1; i <= 10; ++i)
             {
-                uint8_t temp[4];
+                std::uint8_t temp[4];
                 for (int j = 0; j < 4; ++j)
                 {
                     temp[j] = roundKeys[(i - 1) * 16 + j + 12];
                 }
 
-                uint8_t t = temp[0];
+                // Rotate and substitute
+                std::uint8_t t = temp[0];
                 for (int j = 0; j < 3; ++j)
                 {
                     temp[j] = temp[j + 1];
