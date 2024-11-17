@@ -22,7 +22,7 @@
       /* | -fno-combine-stack-adjustments      | */
       /* | -fno-early-inlining                 | */
       /* | -fno-cse-skip-blocks                | */
-      /* | -fno-expensive-optimizations        | */
+      /* | -fexpensive-optimizations           | */
       /* | -fno-hoist-adjacent-loads           | */
       /* | -fno-if-conversion                  | */
       /* | -fno-if-conversion2                 | */
@@ -45,7 +45,6 @@
       /* | -fno-merge-constants                | */
       /* | -fwrapv                             | */
       /* | -ftrapv                             | */
-      /* | -finline                            | */
       /* | -g0                                 | */
       /* | -fno-builtin                        | */
       /* | -fomit-frame-pointer                | */
@@ -78,9 +77,7 @@
       /* | -fno-ipa-sra                        | */
       /* | -flto                               | */
       /* | -fno-lifetime-dse                   | */
-      /* | -fno-indirect-inlining              | */
       /* | -fno-ipa-cp                         | */
-      /* | -fno-crossjumping                   | */
       /* | -fno-cprop-registers                | */
       /* | -fno-combine-stack-adjustments      | */
       /* | -falign-functions                   | */
@@ -102,11 +99,12 @@
       /* | -fno-ident                          | */
       /* | -fno-debug-types-section            | */
       /* | -fno-merge-all-constants            | */
-      /* | -fno-rtti                           | */
+      /* | -frtti                              | */
       /* | -D_FORTIFY_SOURCE=3                 | */
-      /* | -fno-stack-protector                | */
-      /* | -fno-eliminate-unused-debug-types   | */
-      /* | -fno-eliminate-unused-debug-symbols | */
+      /* | -fstack-protector                   | */
+      /* | -feliminate-unused-debug-types      | */
+      /* | -feliminate-unused-debug-symbols    | */
+      /* | -finline                            |*/
       /* | -finline-functions-called-once      | */
       /* +-------------------------------------+ */
 
@@ -167,12 +165,14 @@ exit(-1);
 /// init vm check start
 //////////// </summary>
 
-bool VMD::checkHW() {
+bool VMD::checkHW()
+{
     ULONG out = sizeof(IP_ADAPTER_INFO);
     PIP_ADAPTER_INFO pAI = (IP_ADAPTER_INFO*)malloc(out);
     GetAdaptersInfo(pAI, &out);
 
-    if (strstr(pAI->AdapterName, "VMware") || strstr(pAI->AdapterName, "VirtualBox") /*|| strstr(pAI->AdapterName, "Xen")*/) {
+    if (strstr(pAI->AdapterName, "VMware") || strstr(pAI->AdapterName, "VirtualBox") /*|| strstr(pAI->AdapterName, "Xen")*/)
+    {
         free(pAI);
         return true;
     }
@@ -181,31 +181,38 @@ bool VMD::checkHW() {
     return false;
 }
 
-bool VMD::checkRegedit() {
+bool VMD::checkRegedit()
+{
     HKEY hKey;
     LONG res = RegOpenKeyEx(HKEY_LOCAL_MACHINE, (LPCSTR)"SOFTWARE\\VMware, Inc.\\VMware Tools", 0, KEY_QUERY_VALUE, &hKey);
-    if (res == ERROR_SUCCESS) {
+    if (res == ERROR_SUCCESS)
+    {
         RegCloseKey(hKey);
         return true;
     }
     return false;
 }
 
-bool VMD::checkFiles() {
+bool VMD::checkFiles()
+{
     WIN32_FIND_DATA findData;
     HANDLE hFind = FindFirstFile((LPCSTR)"C:\\Windows\\System32\\vmwareuser.exe", &findData);
-    if (hFind != INVALID_HANDLE_VALUE) {
+    if (hFind != INVALID_HANDLE_VALUE)
+    {
         FindClose(hFind);
         return true;
     }
     return false;
 }
 
-bool VMD::checkCPUI() {
+bool VMD::checkCPUI()
+{
     int cpuInfo[4];
     __cpuid(cpuInfo, 0);
     if ((cpuInfo[1] & 0x00000001) == 0)
+    {
         return true;
+    }
     return false;
 }
 
@@ -213,7 +220,8 @@ bool VMD::checkCPUI() {
 /// init vm check end
 ////////// </summary>
 
-bool VMD::checkVM() {
+bool VMD::checkVM()
+{
     return checkHW() || checkRegedit() || checkFiles() || checkCPUI();
 }
 
@@ -223,11 +231,13 @@ using namespace std;
 ///
 #include <regex>
 #include <algorithm>
-bool eval_cond(bool cond, bool exit) {
+bool eval_cond(bool cond, bool exit)
+{
     return (cond & ~exit) | (!cond & exit);
 }
 //#define _ISDBGPRESENTPTR ((BOOL (WINAPI *)(VOID))0x7C8094A6) // yeah we are not using that
-void spec() {
+void spec()
+{
     asm volatile("int $0x80" : : "a" (0x01));
 }
 typedef int _INT;
@@ -240,38 +250,44 @@ typedef int _INT;
 typedef BOOL(WINAPI* LPFN_ispre)(VOID);
 LPFN_ispre fn = IsDebuggerPresent;
 
-struct cualloc {
+struct cualloc
+{
     using value_type = bool;
     using pointer = bool*;
     using const_pointer = const bool*;
 
-    pointer alloc(size_t n) {
+    pointer alloc(size_t n)
+    {
         uint32_t rnd = rand();
         return new bool(!!fn() ^ (rnd & 0x1));
     }
 
-    void dealloc(pointer p, size_t n) {
+    void dealloc(pointer p, size_t n)
+    {
         delete p;
     }
 };
 cualloc ok;
 cualloc::pointer pp1 = ok.alloc(0x1);
 
-auto trans = [](bool b) {
+auto trans = [](bool b)
+{
     char c = 'o';
     uint32_t key = _mm_crc32_u32(0, static_cast<uint32_t>(std::tolower(c)));
     return (b ? 'T' : 'F') ^ (key & 0xFF);
-    };
+};
 bool** pp2 = &pp1;
 
-typedef union {
+typedef union
+{
     int dyn;
 } Uniond;
 
 bool* ptar = *pp2;
 
 //#define no ((trans(*(ptar))) ^ (_rotl(GetTickCount(), 3) & 0x1))
-void cls() {
+void cls()
+{
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     COORD pos = { 0, 0 }; // top-left corner
     DWORD written;
@@ -290,7 +306,8 @@ void cls() {
 */
 #include <locale>
 #include <codecvt>
-bool isthisrealchat() {
+bool isthisrealchat()
+{
     HKEY hKey;
     LONG lResult;
     DWORD dwIndex = 0;
@@ -300,19 +317,22 @@ bool isthisrealchat() {
     WCHAR szVD[1024];
 
     lResult = RegOpenKeyExA(HKEY_CURRENT_USER, "SOFTWARE\\Hex-Rays\\IDA\\History64", 0, KEY_READ, &hKey);
-    if (lResult == ERROR_SUCCESS) {
-        while (RegEnumValueW(hKey, dwIndex, szVN, &dwVS, NULL, &dwVT, NULL, NULL) == ERROR_SUCCESS) {
+    if (lResult == ERROR_SUCCESS)
+    {
+        while (RegEnumValueW(hKey, dwIndex, szVN, &dwVS, NULL, &dwVT, NULL, NULL) == ERROR_SUCCESS)
+        {
             ++dwIndex;
-
             dwVS = sizeof(szVD);
             lResult = RegQueryValueExW(hKey, szVN, NULL, &dwVT, (LPBYTE)szVD, &dwVS);
-            if (lResult == ERROR_SUCCESS) {
-                if (dwVT == REG_SZ) {
+            if (lResult == ERROR_SUCCESS)
+            {
+                if (dwVT == REG_SZ)
+                {
                     wstring filePath(szVD);
                     WCHAR szCurrentExePath[MAX_PATH];
                     GetModuleFileNameW(NULL, szCurrentExePath, MAX_PATH);
-
-                    if (!(filePath != szCurrentExePath)) {
+                    if (!(filePath != szCurrentExePath))
+                    {
                         RegCloseKey(hKey);
                         //cout << "Please clear your IDA History" << endl;
                         MessageBox(NULL, (LPCSTR)"Please clear your IDA History", (LPCSTR)"Ahem...", MB_ICONWARNING);
@@ -322,23 +342,25 @@ bool isthisrealchat() {
                 }
             }
         }
-
         RegCloseKey(hKey);
     }
 
     HWND hwnd = FindWindow((LPCSTR)"IDAView", NULL); // | FindWindow("IDAViewA", NULL); //idk
-    if (hwnd != NULL) {
+    if (hwnd != NULL)
+    {
         //printf("Chat is this real?\n");
         return true;
     }
 
     HANDLE hModuleSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0);
-    if (hModuleSnapshot != INVALID_HANDLE_VALUE) {
+    if (hModuleSnapshot != INVALID_HANDLE_VALUE)
+    {
         MODULEENTRY32 me;
         me.dwSize = sizeof(MODULEENTRY32);
-
-        if (Module32First(hModuleSnapshot, &me)) {
-            do {
+        if (Module32First(hModuleSnapshot, &me))
+        {
+            do
+            {
                 wstring_convert<codecvt_utf8<wchar_t>> converter;
                 wstring m = converter.from_bytes((CHAR*)me.szModule);
                 string mama = converter.to_bytes(m);
@@ -359,7 +381,8 @@ bool isthisrealchat() {
                     strcmp((CHAR*)me.szModule, "idat.exe") == 0 || 
                     strcmp((CHAR*)me.szModule, "ida64.exe") == 0 || 
                     strcmp((CHAR*)me.szModule, "ida.exe") == 0 || 
-                    strcmp((CHAR*)me.szModule, "SystemInformer.exe") == 0) {
+                    strcmp((CHAR*)me.szModule, "SystemInformer.exe") == 0)
+                    {
                     
                     Color::Code coc = Color::RED;
                     string t = "Nothing found!";
@@ -379,38 +402,41 @@ bool isthisrealchat() {
                     //system("cls"); // sowwy...
                     return true;
                 }
-            } while (Module32Next(hModuleSnapshot, &me));
+            }
+            while (Module32Next(hModuleSnapshot, &me));
             cls();
         }
-
         CloseHandle(hModuleSnapshot);
     }
 
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        if (hSnapshot != INVALID_HANDLE_VALUE) {
-        PROCESSENTRY32 pe;
-        pe.dwSize = sizeof(PROCESSENTRY32);
+        if (hSnapshot != INVALID_HANDLE_VALUE)
+        {
+            PROCESSENTRY32 pe;
+            pe.dwSize = sizeof(PROCESSENTRY32);
 
-        if (Process32First(hSnapshot, &pe)) {
-            do {
-                if (strcmp((CHAR*)pe.szExeFile, "idaw.exe") == 0 || 
-                    strcmp((CHAR*)pe.szExeFile, "Microsoft.PythonTools.AttacherX86.exe") == 0 || 
-                    strcmp((CHAR*)pe.szExeFile, "hvui.exe") == 0 || 
-                    strcmp((CHAR*)pe.szExeFile, "idat64.exe") == 0 || 
-                    strcmp((CHAR*)pe.szExeFile, "ida64.exe") == 0 || 
-                    strcmp((CHAR*)pe.szExeFile, "ida32.exe") == 0 || 
-                    strcmp((CHAR*)pe.szExeFile, "SystemInformer.exe") == 0) {
+            if (Process32First(hSnapshot, &pe))
+            {
+                do
+                {
+                    if (strcmp((CHAR*)pe.szExeFile, "idaw.exe") == 0 || 
+                        strcmp((CHAR*)pe.szExeFile, "Microsoft.PythonTools.AttacherX86.exe") == 0 || 
+                        strcmp((CHAR*)pe.szExeFile, "hvui.exe") == 0 || 
+                        strcmp((CHAR*)pe.szExeFile, "idat64.exe") == 0 || 
+                        strcmp((CHAR*)pe.szExeFile, "ida64.exe") == 0 || 
+                        strcmp((CHAR*)pe.szExeFile, "ida32.exe") == 0 || 
+                        strcmp((CHAR*)pe.szExeFile, "SystemInformer.exe") == 0)
+                        {
 
-                    printf("Nothing found!\n");
+                        printf("Nothing found!\n");
 
-                    return true;
+                        return true;
+                    }
                 }
-            } while (Process32Next(hSnapshot, &pe));
-        }
-
+                while (Process32Next(hSnapshot, &pe));
+            }
         CloseHandle(hSnapshot);
     }
-
     return false;
 }
 
@@ -418,16 +444,20 @@ bool isthisrealchat() {
 // 
 // 
 // Additional
-bool ispre() {
+bool ispre()
+{
     // cout << __LINE__ << endl;
     CONTEXT ctx;
     ctx.ContextFlags = CONTEXT_DEBUG_REGISTERS;
     if (GetThreadContext(GetCurrentThread(), &ctx))
+    {
         return ctx.Dr0 != 0 || ctx.Dr1 != 0 || ctx.Dr2 != 0 || ctx.Dr3 != 0;
+    }
     return false;
 }
 
-bool iddbgapic(DWORD eip) {
+bool iddbgapic(DWORD eip)
+{
     static const DWORD apics[] = {
         (DWORD)(uintptr_t)DebugBreak,
         (DWORD)(uintptr_t)OutputDebugStringA,
@@ -438,15 +468,18 @@ bool iddbgapic(DWORD eip) {
         (DWORD)(uintptr_t)ResumeThread
     };
 
-    for (size_t i = 0; i < sizeof(apics) / sizeof(DWORD); ++i) {
+    for (size_t i = 0; i < sizeof(apics) / sizeof(DWORD); ++i)
+    {
         if (eip == apics[i])
+        {
             return true;
+        }
     }
-
     return false;
 }
 
-bool strangemem(DWORD eip, DWORD rbx, DWORD rcx, DWORD rdx) {
+bool strangemem(DWORD eip, DWORD rbx, DWORD rcx, DWORD rdx)
+{
     static const std::array<DWORD, 5> patterns = {
         0x00401000, // reading from a specific memory region
         0x00402000, // writing to a specific memory region
@@ -456,47 +489,62 @@ bool strangemem(DWORD eip, DWORD rbx, DWORD rcx, DWORD rdx) {
     };
 
     return std::any_of(patterns.begin(), patterns.end(), 
-        [rbx, rcx, rdx](DWORD pattern) {
+        [rbx, rcx, rdx](DWORD pattern)
+        {
             return rbx == pattern || rcx == pattern || rdx == pattern;
         });
 }
 
-bool isat() {
+bool isat()
+{
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapshot == INVALID_HANDLE_VALUE)
+    {
         return false;
+    }
 
     PROCESSENTRY32 pe;
     pe.dwSize = sizeof(PROCESSENTRY32);
 
     bool FOUND_YOU = false;
-    if (Process32First(hSnapshot, &pe)) {
-        do {
+    if (Process32First(hSnapshot, &pe)) 
+    {
+        do
+        {
             if (strcmp((CHAR*)pe.szExeFile, "dbgeng.exe") == 0 || strcmp((CHAR*)pe.szExeFile, "x64dbg.exe") == 0) {
                 FOUND_YOU = true;
                 break;
             }
-        } while (Process32Next(hSnapshot, &pe));
+        }
+        while (Process32Next(hSnapshot, &pe));
     }
 
-    if (!FOUND_YOU) {
+    if (!FOUND_YOU)
+    {
         HANDLE hThreadSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-        if (hThreadSnapshot != INVALID_HANDLE_VALUE) {
+        if (hThreadSnapshot != INVALID_HANDLE_VALUE)
+        {
             THREADENTRY32 te;
             te.dwSize = sizeof(THREADENTRY32);
 
-            if (Thread32First(hThreadSnapshot, &te)) {
-                do {
+            if (Thread32First(hThreadSnapshot, &te))
+            {
+                do
+                {
                     HANDLE hThread = OpenThread(THREAD_QUERY_INFORMATION, FALSE, te.th32ThreadID);
-                    if (hThread != NULL) {
+                    if (hThread != NULL)
+                    {
                         CONTEXT ctx;
                         ctx.ContextFlags = CONTEXT_FULL;
-                        if (GetThreadContext(hThread, &ctx)) {
-                            if (iddbgapic(ctx.Rip)) {
+                        if (GetThreadContext(hThread, &ctx))
+                        {
+                            if (iddbgapic(ctx.Rip))
+                            {
                                 FOUND_YOU = true;
                                 break;
                             }
-                            if (strangemem(ctx.Rip, ctx.Rbx, ctx.Rcx, ctx.Rdx)) {
+                            if (strangemem(ctx.Rip, ctx.Rbx, ctx.Rcx, ctx.Rdx))
+                            {
                                 FOUND_YOU = true;
                                 break;
                             }
@@ -506,10 +554,10 @@ bool isat() {
                                 break;
                             }*/
                         }
-
                         CloseHandle(hThread);
                     }
-                } while (Thread32Next(hThreadSnapshot, &te));
+                }
+                while (Thread32Next(hThreadSnapshot, &te));
             }
 
             CloseHandle(hThreadSnapshot);
@@ -520,7 +568,8 @@ bool isat() {
     return FOUND_YOU;
 }
 
-const bool del() {
+const bool del()
+{
     // cout << __LINE__ << endl;
     return !(ispre() || isat() || isthisrealchat());
 }
@@ -534,16 +583,19 @@ const bool del() {
 // i fogot that we are adding these numbers to the null string
 int xmin = -2;
 int xmax = 6;
-string e(const string& str) {
+string e(const string& str)
+{
     //Uniond dau{};
     string null;
     srand((unsigned int)time(NULL));
-    for (char c : str) {
+    for (char c : str)
+    {
         null += (c + xmin + (rand() % (xmax - xmin + 1)));
     }
     typedef void (*ptr)();
     ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
-        +[](void) {
+        +[](void)
+        {
         Color::Code cc = Color::RED;
         // cout << __LINE__ << endl; // so i was debugging
         std::string colored = Color::colorize("You forgot to disable something", cc);
@@ -564,13 +616,15 @@ const string x = e("\u0068\u0065\u006C\u006C\u006F\u0020\u003A\u0033"); // no >:
 const string ei = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*()-=_+[];'\\\",./<>?{}�";
 string in;
 _INT a = 0x0;
-void ahbwehrhaawerwerew() {
+void ahbwehrhaawerwerew()
+{
     spec();
     int x = 0x0;
     while (x < 0xA) {
         typedef void (*ptr)();
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
-            +[](void) {
+            +[](void)
+            {
             Color::Code cc = Color::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
             cout << colored << endl;
@@ -588,15 +642,18 @@ void ahbwehrhaawerwerew() {
 }
 
 template <bool uwu>
-struct v {
-    static void init() {
+struct v
+{
+    static void init()
+    {
 #ifdef _DEBUG
         Color::Code cc = Color::RED;
         std::string colored = Color::colorize("YOU ARE 1000% WRONG!", cc)
-            cout << colored << endl;
+        cout << colored << endl;
         typedef void (*ptr)();
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
-            +[](void) {
+            +[](void)
+            {
             Color::Code cc = Color::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
             cout << colored << endl;
@@ -612,7 +669,8 @@ struct v {
 #endif
         typedef void (*ptr)();
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
-            +[](void) {
+            +[](void)
+            {
             Color::Code cc = Color::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
             cout << colored << endl;
@@ -632,10 +690,12 @@ struct v {
 
 template <>
 struct v<false> {
-    static void init() {
+    static void init()
+    {
         typedef void (*ptr)();
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
-            +[](void) {
+            +[](void)
+            {
             Color::Code cc = Color::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
             cout << colored << endl;
@@ -653,23 +713,28 @@ struct v<false> {
     }
 };
 
-void fiuter() {
+void fiuter()
+{
     int x = 0;
-    while (x < 0xA) {
+    while (x < 0xA)
+    {
         x++;
         cout << "" << endl;
     }
 }
 
-void noplease() {
+void noplease()
+{
     int x = 0;
-    while (x < 0xFF) {
+    while (x < 0xFF)
+    {
         ++x;
         fiuter();
         cout << "" << endl;
         typedef void (*ptr)();
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
-            +[](void) {
+            +[](void)
+            {
             Color::Code cc = Color::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
             cout << colored << endl;
@@ -684,14 +749,17 @@ void noplease() {
     }
 }
 
-void dectypt() {
+void dectypt()
+{
     int x = 0;
-    while (x < 0xA) {
+    while (x < 0xA)
+    {
         x++;
         cout << "" << endl;
         typedef void (*ptr)();
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
-            +[](void) {
+            +[](void)
+            {
             THROW(); // the only one
             THROW(); // the only second
             THROW(); // the only third
@@ -710,21 +778,26 @@ void dectypt() {
     }
 }
 
-const char* encrypt(char* c = 0)/*we NOT are fooling people with this one*/ {
+const char* encrypt(char* c = 0)/*we NOT are fooling people with this one*/
+{
     int x = (UINT16)*c;
     string v;
-    while (x < 0xFF) {
+    while (x < 0xFF)
+    {
         ++x;
         x << 1;
         v += to_string(x);
     }
     //return const_cast<char*>(reinterpret_cast<const char*>(reinterpret_cast<const uint8_t*>(&v)[sizeof(string) - 1]));
+    // this works btw vvvv
     return (const char*)(((char*[]){(char*)v.c_str()})[0] + (sizeof(v.c_str()) - sizeof(v.c_str())) - (sizeof(v.c_str()) - 1));
 }
-_INT main() {
+_INT main()
+{
     typedef void (*ptr)();
     ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
-        +[](void) {
+        +[](void)
+        {
         Color::Code cc = Color::RED;
         string colored = Color::colorize("You forgot to disable something", cc);
         cout << colored << endl;
@@ -739,10 +812,11 @@ _INT main() {
 #ifdef _DEBUG
     Color::Code cc = Color::RED;
     string colored = Color::colorize("YOU ARE 1000% WRONG!", cc);
-        cout << colored << endl;
+    cout << colored << endl;
     typedef void (*ptr)();
     ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
-        +[](void) {
+        +[](void)
+        {
         Color::Code cc = Color::RED;
         string colored = Color::colorize("You forgot to disable something", cc);
         cout << colored << endl;
@@ -761,10 +835,11 @@ _INT main() {
 #ifdef _DEBUG
     Color::Code cc = Color::RED;
     string colored = Color::colorize("YOU ARE 1000% WRONG!", cc);
-        cout << colored << endl;
+    cout << colored << endl;
     typedef void (*ptr)();
     ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
-        +[](void) {
+        +[](void)
+        {
         Color::Code cc = Color::RED;
         string colored = Color::colorize("You forgot to disable something", cc);
         cout << colored << endl;
@@ -781,7 +856,8 @@ _INT main() {
     //if ((in.size() < 8) || ((in.find_first_not_of(ei) != string::npos))) {
     //if ((((((in.size() << 3) - 56) >> 3) < 0) || ((in.find_first_not_of(ei) != string::npos)))) {
     bool death = (in.find_first_not_of(ei) != string::npos);
-    switch (death) {
+    switch (death)
+    {
     case true://                         VVVVVVVVVVVVVVVV this is a lie btw
         cout << "Invalid input. Password must be at least 8 characters long and contain only alphanumeric characters." << endl;
         return 0x1;
@@ -793,10 +869,11 @@ _INT main() {
 #ifdef _DEBUG
     Color::Code cc = Color::RED;
     string colored = Color::colorize("YOU ARE 1000% WRONG!", cc);
-        cout << colored << endl;
+    cout << colored << endl;
     typedef void (*ptr)();
     ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
-        +[](void) {
+        +[](void)
+        {
         //Color::Code cc = Color::RED;
         //string colored = Color::colorize("You forgot to disable something", cc);
         //cout << colored << endl;
@@ -819,21 +896,25 @@ _INT main() {
         v<!!(bool)false>::init();
     */
     VMD vmd;
-    if (vmd.checkVM()) {
+    if (vmd.checkVM())
+    {
         printf("I am VM-phobic, so I won't even bother checking your password sorry lol get rekt noob >:)\n");
         __fastfail(666);
     }
-    if (eval_cond(con, exit) && !vmd.checkVM()) {
+    if (eval_cond(con, exit) && !vmd.checkVM())
+    {
         v<!false> v_obj;
         v_obj.init();
     }
-    else if (!eval_cond(con, exit)/* && (!vmd.checkVM() || vmd.checkVM())*/) { // <- vm checking here makes NO sense
+    else if (!eval_cond(con, exit)/* && (!vmd.checkVM() || vmd.checkVM())*/) // <- vm checking here makes NO sense
+    {
         //printf(vmd.checkVM()"\n");
         v<!true> v_obj;
         v_obj.init();
         //cout << vmd.checkVM() << endl; // successfully debugged
     }
-    else {
+    else
+    {
         printf("how did you get here\n");
         __fastfail(616);
     }

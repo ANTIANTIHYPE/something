@@ -1,0 +1,12 @@
+[submodule "C++/discord-webhook-manager"]
+	path = C++/discord-webhook-manager
+	url = https://github.com/YOUWILLDIE666/discord-webhook-manager.git
+[submodule "C++/PhysY"]
+	path = C++/PhysY
+	url = https://github.com/YOUWILLDIE666/PhysY.git
+[submodule "C/Memory-Leak"]
+	path = C/Memory-Leak
+	url = https://github.com/ANTIANTIHYPE/Memory-Leak.git
+[submodule "C++/asm-analyze"]
+	path = C++/asm-analyze
+	url = https://github.com/ANTIANTIHYPE/asm-analyze.git
