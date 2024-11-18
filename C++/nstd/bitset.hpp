@@ -22,7 +22,7 @@ namespace nstd
          * @param bit_str A string representing the bits, consisting of '0's and '1's.
          * @throws std::runtime_error if the string is empty or contains invalid characters.
          */
-        explicit bitset(const std::string& bit_str)
+        constexpr explicit bitset(const std::string& bit_str)
         {
             if (bit_str.empty())
             {
@@ -48,13 +48,13 @@ namespace nstd
          * @brief Constructs an empty bitset of a given size.
          * @param size The size of the bitset in bits.
          */
-        explicit bitset(std::size_t size) : size_(size), data_((size + 63) / 64, 0) {}
+        constexpr explicit bitset(std::size_t size) : size_(size), data_((size + 63) / 64, 0) {}
 
         /**
          * @brief Constructs a bitset from an initializer list of booleans.
          * @param bits An initializer list representing the bits.
          */
-        bitset(std::initializer_list<bool> bits) : size_(bits.size()), data_((size_ + 63) / 64, 0)
+        constexpr bitset(std::initializer_list<bool> bits) : size_(bits.size()), data_((size_ + 63) / 64, 0)
         {
             std::size_t index = 0;
             for (bool bit : bits)
@@ -70,7 +70,7 @@ namespace nstd
          * @return true if the bit is set, false otherwise.
          * @throws std::runtime_error if the position is out of range.
          */
-        bool getBit(std::size_t pos) const
+        constexpr bool getBit(std::size_t pos) const
         {
             if (pos >= size_)
             {
@@ -86,7 +86,7 @@ namespace nstd
          * @param value The value to set the bit to (true for 1, false for 0).
          * @throws std::runtime_error if the position is out of range.
          */
-        void setBit(std::size_t pos, bool value)
+        constexpr void setBit(std::size_t pos, bool value)
         {
             if (pos >= size_)
             {
@@ -106,7 +106,7 @@ namespace nstd
          * @brief Converts the bitset to a string representation.
          * @return A string representing the bits, with '1's and '0's.
          */
-        std::string toString() const
+        constexpr std::string toString() const
         {
             std::string result(size_, '0');
             for (std::size_t i = 0; i < size_; ++i)
@@ -123,7 +123,7 @@ namespace nstd
          * @brief Resizes the bitset to a new size.
          * @param newSize The new size of the bitset in bits.
          */
-        void resize(std::size_t newSize)
+        constexpr void resize(std::size_t newSize)
         {
             if (newSize == size_)
             {
@@ -140,7 +140,7 @@ namespace nstd
          * @return A new bitset representing the result of the AND operation.
          * @throws std::runtime_error if the sizes of the bitsets do not match.
          */
-        bitset operator&(const bitset& other) const
+        constexpr bitset operator&(const bitset& other) const
         {
             if (size_ != other.size_)
             {
@@ -161,7 +161,7 @@ namespace nstd
          * @return A new bitset representing the result of the OR operation.
          * @throws std::runtime_error if the sizes of the bitsets do not match.
          */
-        bitset operator|(const bitset& other) const
+        constexpr bitset operator|(const bitset& other) const
         {
             if (size_ != other.size_)
             {
@@ -182,7 +182,7 @@ namespace nstd
          * @return A new bitset representing the result of the XOR operation.
          * @throws std::runtime_error if the sizes of the bitsets do not match.
          */
-        bitset operator^(const bitset& other) const
+        constexpr bitset operator^(const bitset& other) const
         {
             if (size_ != other.size_)
             {
@@ -200,7 +200,7 @@ namespace nstd
          * @brief Checks if the bitset is empty (size is zero).
          * @return true if the bitset is empty, false otherwise.
          */
-        bool empty() const
+        constexpr bool empty() const
         {
             return size_ == 0;
         }
@@ -209,7 +209,7 @@ namespace nstd
          * @brief Retrieves the size of the bitset.
          * @return The size of the bitset in bits.
          */
-        std::size_t size() const
+        constexpr std::size_t size() const
         {
             return size_;
         }

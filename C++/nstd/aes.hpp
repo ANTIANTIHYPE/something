@@ -23,7 +23,7 @@ namespace nstd
          * 
          * @throws std::runtime_error if the input or key size is invalid.
          */
-        void encrypt(std::uint8_t input[16], std::uint8_t key[16], std::uint8_t output[16])
+        constexpr void encrypt(std::uint8_t input[16], std::uint8_t key[16], std::uint8_t output[16]) noexcept
         {
             std::uint8_t state[4][4];
             std::uint8_t roundKeys[176];
@@ -110,7 +110,7 @@ namespace nstd
          * @param state The state matrix.
          * @param roundKey The round key to be added.
          */
-        void addRoundKey(std::uint8_t state[4][4], std::uint8_t roundKey[4][4])
+        constexpr void addRoundKey(std::uint8_t state[4][4], std::uint8_t roundKey[4][4]) noexcept
         {
             for (int i = 0; i < 4; ++i)
             {
@@ -125,7 +125,7 @@ namespace nstd
          * @brief Substitutes bytes in the state matrix using the S-Box.
          * @param state The state matrix.
          */
-        void subBytes(std::uint8_t state[4][4])
+        constexpr void subBytes(std::uint8_t state[4][4]) noexcept
         {
             for (int i = 0; i < 4; ++i)
             {
@@ -140,7 +140,7 @@ namespace nstd
          * @brief Shifts rows in the state matrix.
          * @param state The state matrix.
          */
-        void shiftRows(std::uint8_t state[4][4])
+        constexpr void shiftRows(std::uint8_t state[4][4]) noexcept
         {
             std::uint8_t temp;
 
@@ -171,7 +171,7 @@ namespace nstd
          * @brief Mixes the columns of the state matrix.
          * @param state The state matrix.
          */
-        void mixColumns(std::uint8_t state[4][4])
+        constexpr void mixColumns(std::uint8_t state[4][4]) noexcept
         {
             for (int j = 0; j < 4; j++)
             {
@@ -195,7 +195,7 @@ namespace nstd
          * @param key The original encryption key.
          * @param roundKeys The array to hold the expanded keys.
          */
-        void keyExpansion(const std::uint8_t* key, std::uint8_t* roundKeys)
+        constexpr void keyExpansion(const std::uint8_t* key, std::uint8_t* roundKeys) noexcept
         {
             for (int i = 0; i < 16; ++i)
             {
