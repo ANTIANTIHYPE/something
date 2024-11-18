@@ -110,7 +110,7 @@ namespace nstd
          * @param str The string to move from.
          * @return A reference to this string.
          */
-        constexpr string& operator=(string&& str) const
+        constexpr string& operator=(string&& str) noexcept
         {
             if (this != &str)
             {
@@ -129,7 +129,7 @@ namespace nstd
          * @param str The string to copy from.
          * @return A reference to this string.
          */
-        constexpr string& operator=(const string& str) noexcept
+        constexpr string& operator=(const string& str)
         {
             if (this != &str)
             {
@@ -145,7 +145,7 @@ namespace nstd
          * @param s The C-style string to assign.
          * @return A reference to this string.
          */
-        constexpr string& operator=(const char* s) noexcept
+        constexpr string& operator=(const char* s)
         {
             assign(s, traits::length(s));
             return *this;
@@ -200,7 +200,7 @@ namespace nstd
          * @brief Returns the length of the string.
          * @return The number of characters in the string.
          */
-        constexpr size_type length() { return size_; }
+        constexpr size_type length() const { return size_; }
 
         /**
          * @brief Returns the maximum size of the string.
@@ -360,7 +360,7 @@ namespace nstd
          * @brief Swaps the contents of this string with another string.
          * @param str The string to swap with.
          */
-        constexpr void swap(string& str)
+        constexpr void swap(string& str) noexcept
         {
             std::swap(alloc_, str.alloc_);
             std::swap(data_, str.data_);
