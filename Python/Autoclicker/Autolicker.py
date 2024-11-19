@@ -6,7 +6,6 @@ import threading
 import configparser
 import os
 
-# Load or create configuration
 config = configparser.ConfigParser()
 cfg_name = 'config.cfg'
 if os.path.isfile(cfg_name):
@@ -19,7 +18,6 @@ else:
     with open(cfg_name, 'w') as configfile:
         config.write(configfile)
 
-# Initialize hotkeys and variables
 start_hotkey = config.get('Hotkeys', 'start_hotkey')
 add_coordinate_hotkey = config.get('Hotkeys', 'add_coordinate_hotkey')
 coordinates = []  # (x, y)
@@ -129,7 +127,6 @@ root.title("Autoclicker")
 root.resizable(False, False)
 root.wm_iconphoto(False, tk.PhotoImage(file=r"./death.png"))
 
-# Create UI elements
 start_button = tk.Button(root, text="Start", command=start)
 stop_button = tk.Button(root, text="Stop", command=stop)
 add_button = tk.Button(root, text=f"Add Coordinate (Hotkey: \"{add_coordinate_hotkey.upper()}\")", command=add_coordinate)
@@ -139,7 +136,6 @@ status_label = tk.Label(root, text="Autoclicker is OFF. Press \"{}\" to turn it 
 delete_button = tk.Button(root, text="Delete Selected", command=delete_coordinates)
 coordinate_list = tk.Listbox(root, width=30, selectmode=tk.MULTIPLE)
 
-# Arrange UI elements in grid
 start_button.grid(row=0, column=0, padx=10, pady=10)
 stop_button.grid(row=0, column=1, padx=10, pady=10)
 add_button.grid(row=0, column=2, padx=10, pady=10)
@@ -149,7 +145,6 @@ status_label.grid(row=1, column=0, columnspan=5, padx=10, pady=10)
 delete_button.grid(row=0, column=5, padx=10, pady=10)
 coordinate_list.grid(row=2, column=0, columnspan=5, padx=10, pady=10)
 
-# Start listener thread and main loop
 listener_thread = threading.Thread(target=listen, daemon=True)
 listener_thread.start()
 root.after(0, main_loop)
