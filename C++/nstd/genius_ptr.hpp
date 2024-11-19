@@ -51,6 +51,9 @@ namespace nstd
             other.weak_count = nullptr;
         }
 
+        /**
+         * @brief Destructor that releases the managed object if this is the last owner.
+         */
         ~genius_ptr() 
         {
             release();
@@ -100,6 +103,21 @@ namespace nstd
         }
 
         /**
+         * @brief Assignment operator that allows assignment from nullptr.
+         * 
+         * @param nullptr_t A nullptr to assign to this genius_ptr.
+         * @return A reference to this genius_ptr.
+         */
+        genius_ptr& operator=(std::nullptr_t) noexcept
+        {
+            release();
+            ptr = nullptr;
+            shared_count = new std::atomic<size_t>(0);
+            weak_count = new std::atomic<size_t>(0);
+            return *this;
+        }
+
+        /**
          * @brief Retrieves the raw pointer managed by the genius_ptr.
          * @return A pointer to the managed object.
          */
@@ -119,9 +137,9 @@ namespace nstd
 
         /**
          * @brief Returns the number of shared owners of the managed object.
-         * @return The number of shared_ptr instances managing the same object.
+         * @return The number of genius_ptr instances managing the same object.
          */
-        constexpr std::size_t use_count() const { return shared_count ? shared_count : 0; }
+        constexpr std::size_t use_count() const { return shared_count ? shared_count->load() : 0; }
 
         /**
          * @brief A weak pointer that can observe the managed object without taking ownership.
@@ -135,10 +153,10 @@ namespace nstd
             constexpr weak_ptr() : ptr(nullptr), shared_count(nullptr) {}
 
             /**
-             * @brief Constructs a weak_ptr from a genius_ptr.
+             * @brief Constructs a weak_ptr from a genius_ptr, sharing the ownership.
              * @param gptr The genius_ptr to observe.
              */
-            constexpr weak_ptr(const genius_ptr<T>& gptr) : ptr (gptr.ptr), shared_count(gptr.shared_count)
+            constexpr weak_ptr(const genius_ptr<T>& gptr) : ptr(gptr.ptr), shared_count(gptr.shared_count)
             {
                 if (shared_count)
                 {
@@ -146,6 +164,9 @@ namespace nstd
                 }
             }
 
+            /**
+             * @brief Destructor that decrements the weak count.
+             */
             ~weak_ptr()
             {
                 if (shared_count && --(*shared_count) == 0)
@@ -155,10 +176,10 @@ namespace nstd
             }
 
             /**
-             * @brief Checks if the managed object has expired (i.e., no more shared owners).
+             * @brief Checks if the managed object has expired (i.e., no shared owners).
              * @return true if the managed object has expired, false otherwise.
              */
-            constexpr bool expired() const { return !shared_count || *shared_count == 0; }
+            constexpr bool expired() const { return !shared_count || shared_count->load() == 0; }
 
             /**
              * @brief Attempts to create a genius_ptr from the weak_ptr.
@@ -171,7 +192,7 @@ namespace nstd
                     return genius_ptr<T>();
                 }
                 return genius_ptr<T>(ptr);
-            } // class weak_ptr
+            }
 
         private:
             T* ptr;
@@ -179,8 +200,8 @@ namespace nstd
         };
 
         /**
-         * @brief Creates a weak_ptr that observes the managed object.
-         * @return A weak_ptr that observes this genius_ptr.
+         * @brief Creates a weak_ptr from this genius_ptr.
+         * @return A weak_ptr that observes the managed object.
          */
         constexpr weak_ptr get_weak_ptr() const
         {
@@ -193,7 +214,7 @@ namespace nstd
         std::atomic<size_t>* weak_count;
 
         /**
-         * @brief Releases the managed object if this is the last owner.
+         * @brief Releases the managed object and decrements the reference counts.
          */
         constexpr void release()
         {
@@ -201,6 +222,7 @@ namespace nstd
             {
                 delete ptr;
                 delete shared_count;
+                delete weak_count;
             }
         }
     }; // class genius_ptr

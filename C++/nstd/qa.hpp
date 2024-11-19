@@ -1,11 +1,8 @@
 #pragma once
 
 #include <iostream>
-#include <vector>
 #include <complex>
 #include <stdexcept>
-#include <algorithm>
-#include <numeric>
 #include <random>
 
 namespace nstd
@@ -25,7 +22,8 @@ namespace nstd
          */
         constexpr QuantumArray(int n) : size(n)
         {
-            if (n <= 0) {
+            if (n <= 0)
+            {
                 throw std::invalid_argument("Size must be positive");
             }
             states.resize(n, {0, 0});
@@ -108,7 +106,7 @@ namespace nstd
         constexpr void normalize()
         {
             double norm = 0.0;
-            for (const auto& state : states)
+            for (const std::complex<double>& state : states)
             {
                 norm += std::norm(state);
             }
@@ -117,7 +115,7 @@ namespace nstd
                 throw std::runtime_error("Cannot normalize zero norm state");
             }
 
-            for (auto& state : states)
+            for (std::complex<double>& state : states)
             {
                 state /= std::sqrt(norm);
             }
@@ -132,7 +130,7 @@ namespace nstd
         {
             for (int i = 0; i < size; ++i)
             {
-                std::cout << "State [" << i << "] = " << states[i] << std::endl;
+                std::cout << "State[" << i << "] = " << states[i] << std::endl;
             }
         }
 

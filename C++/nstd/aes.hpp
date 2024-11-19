@@ -23,7 +23,7 @@ namespace nstd
          * 
          * @throws std::runtime_error if the input or key size is invalid.
          */
-        constexpr void encrypt(std::uint8_t input[16], std::uint8_t key[16], std::uint8_t output[16]) noexcept
+        void encrypt(std::uint8_t input[16], std::uint8_t key[16], std::uint8_t output[16]) noexcept
         {
             std::uint8_t state[4][4];
             std::uint8_t roundKeys[176];
@@ -140,7 +140,7 @@ namespace nstd
          * @brief Shifts rows in the state matrix.
          * @param state The state matrix.
          */
-        constexpr void shiftRows(std::uint8_t state[4][4]) noexcept
+        void shiftRows(std::uint8_t state[4][4]) noexcept
         {
             std::uint8_t temp;
 
@@ -171,7 +171,7 @@ namespace nstd
          * @brief Mixes the columns of the state matrix.
          * @param state The state matrix.
          */
-        constexpr void mixColumns(std::uint8_t state[4][4]) noexcept
+        void mixColumns(std::uint8_t state[4][4]) noexcept
         {
             for (int j = 0; j < 4; j++)
             {
@@ -195,7 +195,7 @@ namespace nstd
          * @param key The original encryption key.
          * @param roundKeys The array to hold the expanded keys.
          */
-        constexpr void keyExpansion(const std::uint8_t* key, std::uint8_t* roundKeys) noexcept
+        void keyExpansion(const std::uint8_t* key, std::uint8_t* roundKeys) noexcept
         {
             for (int i = 0; i < 16; ++i)
             {

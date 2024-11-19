@@ -93,6 +93,22 @@ namespace nstd
     {
         struct promise_type
         {
+            int current_value;
+            int return_value_;
+            std::exception_ptr exception_;
+
+            /**
+             * @brief Provides the initial suspend behavior of the coroutine.
+             * @return A suspend operation.
+             */
+            std::__n4861::suspend_always initial_suspend() { return std::suspend_always(); }
+
+            /**
+             * @brief Provides the final suspend behavior of the coroutine.
+             * @return A suspend operation.
+             */
+            std::__n4861::suspend_always final_suspend() noexcept { return std::suspend_always(); }
+
             /**
              * @brief Retrieves the coroutine object.
              * @return The coroutine object.
@@ -133,10 +149,6 @@ namespace nstd
             {
                 exception_ = std::current_exception();
             }
-
-            int current_value;
-            int return_value_;
-            std::exception_ptr exception_;
         };
 
         using handle_type = std::coroutine_handle<promise_type>;
@@ -161,9 +173,8 @@ namespace nstd
 
         /**
          * @brief Resumes the coroutine execution.
-         * 
          * @return true if the coroutine was resumed successfully, false if it has finished.
-         * @throws std::exception if an unhandled exception occurred in the coroutine.
+         * @throws std::exception if an un handled exception occurs during execution.
          */
         bool resume()
         {
@@ -195,24 +206,6 @@ namespace nstd
         int return_value()
         {
             return coro.promise().return_value_;
-        }
-    };
-
-    /**
-     * @brief Factory class for creating coroutines.
-     */
-    class coroutineFactory
-    {
-    public:
-        /**
-         * @brief Creates a coroutine from a given function.
-         * 
-         * @param func The function that returns a coroutine.
-         * @return The created coroutine.
-         */
-        static coroutine create(std::function<coroutine()> func)
-        {
-            return func();
         }
     };
 

@@ -1,0 +1,40 @@
+#include <iostream>
+#include <endianness.hpp>
+
+void testEndianness()
+{
+    nstd::endianness end;
+
+    // Test 16-bit conversions
+    std::uint16_t value16 = 0x1234;
+    std::uint16_t net16 = end.htons(value16);
+    std::uint16_t host16 = end.ntohs(net16);
+    std::cout << "16-bit conversion:\n";
+    std::cout << "Original: 0x" << std::hex << value16 << "\n";
+    std::cout << "Network:  0x" << net16 << "\n";
+    std::cout << "Host:     0x" << host16 << "\n\n";
+
+    // Test 32-bit conversions
+    std::uint32_t value32 = 0x12345678;
+    std::uint32_t net32 = end.htonl(value32);
+    std::uint32_t host32 = end.ntohl(net32);
+    std::cout << "32-bit conversion:\n";
+    std::cout << "Original: 0x" << value32 << "\n";
+    std::cout << "Network:  0x" << net32 << "\n";
+    std::cout << "Host:     0x" << host32 << "\n\n";
+
+    // Test 64-bit conversions
+    std::uint64_t value64 = 0x123456789ABCDEF0;
+    std::uint64_t net64 = end.htonll(value64);
+    std::uint64_t host64 = end.ntohll(net64);
+    std::cout << "64-bit conversion:\n";
+    std::cout << "Original: 0x" << value64 << "\n";
+    std::cout << "Network:  0x" << net64 << "\n";
+    std::cout << "Host:     0x" << host64 << "\n";
+}
+
+int main()
+{
+    testEndianness();
+    return 0;
+}
