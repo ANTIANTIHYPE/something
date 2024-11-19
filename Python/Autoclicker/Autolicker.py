@@ -6,6 +6,7 @@ import threading
 import configparser
 import os
 
+# Load or create configuration
 config = configparser.ConfigParser()
 cfg_name = 'config.cfg'
 if os.path.isfile(cfg_name):
@@ -18,9 +19,9 @@ else:
     with open(cfg_name, 'w') as configfile:
         config.write(configfile)
 
+# Initialize hotkeys and variables
 start_hotkey = config.get('Hotkeys', 'start_hotkey')
 add_coordinate_hotkey = config.get('Hotkeys', 'add_coordinate_hotkey')
-
 coordinates = []  # (x, y)
 autoclicker_on = False
 adding = False
@@ -28,20 +29,21 @@ adding = False
 def toggle() -> None:
     global autoclicker_on
     autoclicker_on = not autoclicker_on
-    update("Autoclicker is ON. Press \"{}\" to turn it OFF.".format(
-        start_hotkey) if autoclicker_on else "Autoclicker is OFF. Press \"{}\" to turn it ON.".format(start_hotkey))
+    update_status()
 
-def update(msg) -> None: status_label.config(text=msg)
+def update_status() -> None:
+    status_msg = "Autoclicker is ON. Press \"{}\" to turn it OFF.".format(start_hotkey) if autoclicker_on else "Autoclicker is OFF. Press \"{}\" to turn it ON.".format(start_hotkey)
+    status_label.config(text=status_msg)
 
 def start() -> None:
     global autoclicker_on
     autoclicker_on = True
-    toggle()
+    update_status()
 
 def stop() -> None:
     global autoclicker_on
     autoclicker_on = False
-    toggle()
+    update_status()
 
 def add_coordinate() -> None:
     global adding
@@ -57,10 +59,9 @@ def add_coordinate() -> None:
 
 def get_coordinate(event, overlay) -> None:
     global adding
-    x, y = event.x_root, event.y_root
-    coordinates.append((x, y))
-    coordinate_list.insert(tk.END, f"({x}, {y})")
-    print(f"Added coordinate: ( X: {x}, Y: {y} )")
+    coordinates.append((event.x_root, event.y_root))
+    coordinate_list.insert(tk.END, f"({event.x_root}, {event.y_root})")
+    print(f"Added coordinate: ( X: {event.x_root}, Y: {event.y_root} )")
     overlay.destroy()
     adding = False
 
@@ -74,51 +75,35 @@ def listen() -> None:
 def choose_hotkey(action) -> None:
     def set_hotkey(event):
         global start_hotkey, add_coordinate_hotkey
-        try:
-            if action == 'start':
-                if event.keysym.lower() == 'prior':
-                    start_hotkey = 'PgUp'
-                elif event.keysym.lower() == 'next':
-                    start_hotkey = 'Page_Down'
-                elif event.keysym.lower() == 'control_l' or event.keysym.lower() == 'control_r':
-                    start_hotkey = 'Ctrl'
-                elif event.keysym.lower() == 'alt_l' or event.keysym.lower() == 'alt_r':
-                    start_hotkey = 'Alt'
-                elif event.keysym.lower() == 'shift_l' or event.keysym.lower() == 'shift_r':
-                    start_hotkey = 'Shift'
-                else:
-                    start_hotkey = event.keysym
-                config.set('Hotkeys', 'start_hotkey', start_hotkey)
-            elif action == 'add':
-                if event.keysym.lower() == 'prior':
-                    add_coordinate_hotkey = 'PgUp'
-                elif event.keysym.lower() == 'next':
-                    add_coordinate_hotkey = 'Page_Down'
-                elif event.keysym.lower() == 'control_l' or event.keysym.lower() == 'control_r':
-                    add_coordinate_hotkey = 'Ctrl'
-                elif event.keysym.lower() == 'alt_l' or event.keysym.lower() == 'alt_r':
-                    add_coordinate_hotkey = 'Alt'
-                elif event.keysym.lower() == 'shift_l' or event.keysym.lower() == 'shift_r':
-                    add_coordinate_hotkey = 'Shift'
-                else:
-                    add_coordinate_hotkey = event.keysym
-                config.set('Hotkeys', 'add_coordinate_hotkey', add_coordinate_hotkey)
-            with open('config.cfg', 'w') as configfile:
-                config.write(configfile)
-            update_hotkey_labels()
-            keyboard.unhook_all_hotkeys()
-            listen()
-            hotkey_window.destroy()
-        except Exception as e:
-            print(f"Error setting hotkey: {e}")
+        key_mapping = {
+            'prior': 'PgUp',
+            'next': 'Page_Down',
+            'control_l': 'Ctrl',
+            'control_r': 'Ctrl',
+            'alt_l': 'Alt',
+            'alt_r': 'Alt',
+            'shift_l': 'Shift',
+            'shift_r': 'Shift'
+        }
+        if action == 'start':
+            start_hotkey = key_mapping.get(event.keysym.lower(), event.keysym)
+            config.set('Hotkeys', 'start_hotkey', start_hotkey)
+        elif action == 'add':
+            add_coordinate_hotkey = key_mapping.get(event.keysym.lower(), event.keysym)
+            config.set('Hotkeys', 'add_coordinate_hotkey', add_coordinate_hotkey)
+
+        with open(cfg_name, 'w') as configfile:
+            config.write(configfile)
+        update_hotkey_labels()
+        keyboard.unhook_all_hotkeys()
+        listen()
+        hotkey_window.destroy()
 
     hotkey_window = tk.Toplevel(root)
     hotkey_window.title("Choose Hotkey")
-    hotkey_label = tk.Label(hotkey_window, text=f"Press the key for \"{action}\" action:")
-    hotkey_label.pack(pady=20)
+    tk.Label(hotkey_window, text=f"Press the key for \"{action}\" action:").pack(pady=20)
     hotkey_window.bind("<KeyPress>", set_hotkey)
-    instruction_label = tk.Label(hotkey_window, text="Press any key to set it as the hotkey.")
-    instruction_label.pack(pady=10)
+    tk.Label(hotkey_window, text="Press any key to set it as the hotkey.").pack(pady=10)
 
 def delete_coordinates() -> None:
     selected = coordinate_list.curselection()
@@ -136,10 +121,7 @@ def main_loop() -> None:
             for x, y in coordinates:
                 pyautogui.click(x, y)
                 time.sleep(0.1)
-        try:
-            time.sleep(0.1)
-        except:
-            break
+        time.sleep(0.1)
         root.update()
 
 root = tk.Tk()
@@ -147,8 +129,9 @@ root.title("Autoclicker")
 root.resizable(False, False)
 root.wm_iconphoto(False, tk.PhotoImage(file=r"./death.png"))
 
-start_button = tk.Button(root, text="Stop", command=start)
-stop_button = tk.Button(root, text="Start", command=stop)
+# Create UI elements
+start_button = tk.Button(root, text="Start", command=start)
+stop_button = tk.Button(root, text="Stop", command=stop)
 add_button = tk.Button(root, text=f"Add Coordinate (Hotkey: \"{add_coordinate_hotkey.upper()}\")", command=add_coordinate)
 hotkey_button = tk.Button(root, text="Choose Start Hotkey", command=lambda: choose_hotkey('start'))
 add_hotkey_button = tk.Button(root, text="Choose Add Coordinate Hotkey", command=lambda: choose_hotkey('add'))
@@ -156,6 +139,7 @@ status_label = tk.Label(root, text="Autoclicker is OFF. Press \"{}\" to turn it 
 delete_button = tk.Button(root, text="Delete Selected", command=delete_coordinates)
 coordinate_list = tk.Listbox(root, width=30, selectmode=tk.MULTIPLE)
 
+# Arrange UI elements in grid
 start_button.grid(row=0, column=0, padx=10, pady=10)
 stop_button.grid(row=0, column=1, padx=10, pady=10)
 add_button.grid(row=0, column=2, padx=10, pady=10)
@@ -165,6 +149,7 @@ status_label.grid(row=1, column=0, columnspan=5, padx=10, pady=10)
 delete_button.grid(row=0, column=5, padx=10, pady=10)
 coordinate_list.grid(row=2, column=0, columnspan=5, padx=10, pady=10)
 
+# Start listener thread and main loop
 listener_thread = threading.Thread(target=listen, daemon=True)
 listener_thread.start()
 root.after(0, main_loop)
@@ -172,11 +157,8 @@ root.after(0, main_loop)
 if __name__ == "__main__":
     try:
         root.mainloop()
-    except:
-        exit()
+    except Exception as e:
+        print(f"Error: {e}")
     finally:
-        try:
-            keyboard.unhook_all_hotkeys()
-            root.destroy()
-        except:
-            exit()
+        keyboard.unhook_all_hotkeys()
+        root.destroy()
