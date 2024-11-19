@@ -174,7 +174,7 @@ namespace nstd
         /**
          * @brief Resumes the coroutine execution.
          * @return true if the coroutine was resumed successfully, false if it has finished.
-         * @throws std::exception if an un handled exception occurs during execution.
+         * @throws std::exception if an unhandled exception occurs during execution.
          */
         bool resume()
         {

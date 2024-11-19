@@ -16,8 +16,9 @@ if not exist %name% mkdir %name%
 cd %name%
 
 for /L %%i in (0,1,%count%) do (
-    echo Compiling !tests[%%i]!.cpp...
-    g++ -o !tests[%%i]! ..\!tests[%%i]!.cpp --std=c++2b -O3 -I..\..
+    set "file=!tests[%%i]!"
+    echo Compiling !file!.cpp...
+    g++ -o !file! ..\!file!.cpp --std=c++2b -O3 -I..\..
 )
 
 if %errorlevel%==1 pause

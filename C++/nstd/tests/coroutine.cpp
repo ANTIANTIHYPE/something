@@ -1,6 +1,7 @@
 #include <coroutine.hpp>
 
 #if __cplusplus > 201703L
+
 nstd::coroutine sampleCoroutine()
 {
     std::cout << "Coroutine started.\n";
@@ -22,6 +23,7 @@ void testCoroutineC20()
     }
     std::cout << "Return value: " << coro.return_value() << '\n';
 }
+
 #else // ^^^ C++20 ^^^ VVV C++98 to C++17 VVV
 
 void testCoroutineC17()
