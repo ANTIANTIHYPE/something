@@ -51,7 +51,7 @@ namespace nstd
             other.weak_count = nullptr;
         }
 
-        constexpr ~genius_ptr() 
+        ~genius_ptr() 
         {
             release();
         }
@@ -121,7 +121,7 @@ namespace nstd
          * @brief Returns the number of shared owners of the managed object.
          * @return The number of shared_ptr instances managing the same object.
          */
-        constexpr std::size_t use_count() const { return shared_count ? *shared_count : 0; }
+        constexpr std::size_t use_count() const { return shared_count ? shared_count : 0; }
 
         /**
          * @brief A weak pointer that can observe the managed object without taking ownership.
@@ -146,7 +146,7 @@ namespace nstd
                 }
             }
 
-            constexpr ~weak_ptr()
+            ~weak_ptr()
             {
                 if (shared_count && --(*shared_count) == 0)
                 {
