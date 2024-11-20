@@ -10,23 +10,23 @@ void test()
         quantumArray.set(1, {0.0, 1.0});       // |1>
         quantumArray.set(2, {0.7071, 0.7071}); // |+>
 
-        std::cout << "Initial Quantum States:\n";
+        std::cout << "Initial Quantum States:" << std::endl;
         quantumArray.print();
 
-        std::cout << "Measuring quantum state...\n";
+        std::cout << "Measuring quantum state..." << std::endl;
         quantumArray.measure();
 
-        std::cout << "Normalizing quantum states...\n";
+        std::cout << "Normalizing quantum states..." << std::endl;
         quantumArray.normalize();
         quantumArray.print();
 
-        std::cout << "Measuring quantum state after normalization...\n";
+        std::cout << "Measuring quantum state after normalization..." << std::endl;
         quantumArray.measure();
 
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Error: " << e.what() << '\n';
+        std::cerr << "Error: " << e.what() << std::endl;
     }
 
     try
@@ -35,7 +35,7 @@ void test()
     }
     catch (const std::invalid_argument& e)
     {
-        std::cout << e.what() << '\n';
+        std::cout << e.what() << std::endl;
     }
 
     try
@@ -46,7 +46,7 @@ void test()
     }
     catch (const std::out_of_range& e)
     {
-        std::cout << e.what() << '\n';
+        std::cout << e.what() << std::endl;
     }
 
     try
@@ -56,7 +56,7 @@ void test()
     }
     catch (const std::runtime_error& e)
     {
-        std::cout << e.what() << '\n';
+        std::cout << e.what() << std::endl;
     }
 }
 

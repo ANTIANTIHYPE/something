@@ -4,38 +4,38 @@
 
 nstd::coroutine sampleCoroutine()
 {
-    std::cout << "Coroutine started.\n";
+    std::cout << "Coroutine started." << std::endl;
     co_yield 1;
-    std::cout << "Coroutine resumed, yielding 2.\n";
+    std::cout << "Coroutine resumed, yielding 2." << std::endl;
     co_yield 2;
-    std::cout << "Coroutine resumed, returning 3.\n";
+    std::cout << "Coroutine resumed, returning 3." << std::endl;
     co_return 3;
 }
 
 void testCoroutineC20()
 {
-    std::cout << "Testing C++20 coroutine:\n";
+    std::cout << "Testing C++20 coroutine..." << std::endl;
     nstd::coroutine coro = sampleCoroutine();
 
     while (coro.resume())
     {
-        std::cout << "Yielded value: " << coro.current_value() << '\n';
+        std::cout << "Yielded value: " << coro.current_value() << std::endl;
     }
-    std::cout << "Return value: " << coro.return_value() << '\n';
+    std::cout << "Return value: " << coro.return_value() << std::endl;
 }
 
 #else // ^^^ C++20 ^^^ VVV C++98 to C++17 VVV
 
 void testCoroutineC17()
 {
-    std::cout << "Testing C++17 coroutine:\n";
+    std::cout << "Testing C++17 coroutine..." << std::endl;
 
     nstd::coroutine coro([]()
     {
-        std::cout << "Coroutine started.\n";
+        std::cout << "Coroutine started." << std::endl;
         for (int i = 1; i <= 3; ++i)
         {
-            std::cout << "Yielding: " << i << '\n';
+            std::cout << "Yielding: " << i << std::endl;
             if (i < 3)
             {
                 throw std::exception();
@@ -47,12 +47,12 @@ void testCoroutineC17()
     {
         while (coro.resume())
         {
-            std::cout << "Coroutine resumed.\n";
+            std::cout << "Coroutine resumed." << std::endl;
         }
     }
     catch (const std::exception&)
     {
-        std::cout << "Coroutine finished.\n";
+        std::cout << "Coroutine finished." << std::endl;
     }
 }
 

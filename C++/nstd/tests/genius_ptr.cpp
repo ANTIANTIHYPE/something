@@ -6,17 +6,17 @@ class Sample
 public:
     constexpr Sample(int value) : value(value)
     {
-        std::cout << "Sample constructed with value: " << value << '\n';
+        std::cout << "Sample constructed with value: " << value << std::endl;
     }
 
     ~Sample()
     {
-        std::cout << "Sample destructed with value: " << value << '\n';
+        std::cout << "Sample destructed with value: " << value << std::endl;
     }
 
     constexpr void display() const 
     {
-        std::cout << "Value: " << value << '\n';
+        std::cout << "Value: " << value << std::endl;
     }
 
 private:
@@ -29,10 +29,10 @@ int main()
     ptr1->display();
 
     nstd::genius_ptr<Sample> ptr2 = ptr1;
-    std::cout << "Use count after copying ptr1 to ptr2: " << ptr1.use_count() << '\n';
+    std::cout << "Use count after copying ptr1 to ptr2: " << ptr1.use_count() << std::endl;
 
     nstd::genius_ptr<Sample>::weak_ptr weakPtr = ptr1.get_weak_ptr();
-    std::cout << "Weak pointer expired: " << weakPtr.expired() << '\n';
+    std::cout << "Weak pointer expired: " << weakPtr.expired() << std::endl;
 
     if (!weakPtr.expired())
     {
@@ -41,7 +41,7 @@ int main()
     }
 
     ptr1 = nullptr;
-    std::cout << "Use count after resetting ptr1: " << ptr2.use_count() << '\n';
+    std::cout << "Use count after resetting ptr1: " << ptr2.use_count() << std::endl;
 
     ptr2 = nullptr;
 
