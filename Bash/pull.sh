@@ -1,22 +1,23 @@
 #!/bin/bash
 
-# This script pulls updates from the remote repository for every local Git repository found on the computer
-
 pull() {
-    local path="\$1"
-    echo "Pulling in repository: $path"
+    local path="$1"
+    
     cd "$path" || {
-        echo "Failed to enter directory: $path"
-        return
+        echo "Error: Failed to enter directory: $path" >&2
+        return 1
     }
+    
     if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-        git pull origin HEAD || {
-            echo "Failed to pull in repository: $path"
-        }
+        if git pull origin HEAD; then
+            echo "Successfully pulled in repository: $path"
+        fi
     fi
 }
 
-find ~ -type d -name ".git" | while read -r gitdir; do
+find ~ -type d -name ".git" | while IFS= read -r gitdir; do
     path="$(dirname "$gitdir")"
-    pull "$path"
+    pull "$path" || {
+        echo "Error occurred while processing: $path" >&2
+    }
 done
