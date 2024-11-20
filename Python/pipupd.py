@@ -41,7 +41,7 @@ class OutdatedChecker(QThread):
 class App(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Pip Package Manager")
+        self.setWindowTitle("Pip Package Updater")
         self.setGeometry(100, 100, 400, 300)
 
         layout = QVBoxLayout()
@@ -84,9 +84,10 @@ class App(QWidget):
             item.setData(Qt.ItemDataRole.UserRole, package_name)
 
     def update_all_packages(self):
-        if self.outdated_packages == []:
+        if not self.outdated_packages:
             print("Nothing to update")
             return
+
         package_names = [pkg[0] for pkg in self.outdated_packages]
         self.thread = PackageUpdater(package_names)
         self.thread.update_finished.connect(self.remove_package_item)
