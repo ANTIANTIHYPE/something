@@ -18,6 +18,7 @@ namespace nstd
     public:
         /**
          * @brief Returns a description of the exception.
+         * 
          * @return A C-style string describing the error.
          */
         const char* what() const noexcept override
@@ -36,6 +37,7 @@ namespace nstd
 
         /**
          * @brief Resumes the coroutine execution.
+         * 
          * @return true if the coroutine was resumed successfully, false if it has finished.
          */
         virtual bool resume() = 0;
@@ -51,6 +53,7 @@ namespace nstd
     public:
         /**
          * @brief Constructs a coroutine with a given function.
+         * 
          * @param func The function to be executed by the coroutine.
          */
         coroutine(std::function<void()> func)
@@ -60,6 +63,7 @@ namespace nstd
          * @brief Resumes the coroutine execution.
          * 
          * @return true if the coroutine was resumed successfully, false if it has finished.
+         * 
          * @throws CoroutineException if an error occurs during execution.
          */
         bool resume() override
@@ -99,18 +103,21 @@ namespace nstd
 
             /**
              * @brief Provides the initial suspend behavior of the coroutine.
+             * 
              * @return A suspend operation.
              */
-            std::__n4861::suspend_always initial_suspend() { return std::suspend_always(); }
+            std::suspend_always initial_suspend() { return std::suspend_always(); }
 
             /**
              * @brief Provides the final suspend behavior of the coroutine.
+             * 
              * @return A suspend operation.
              */
-            std::__n4861::suspend_always final_suspend() noexcept { return std::suspend_always(); }
+            std::suspend_always final_suspend() noexcept { return std::suspend_always(); }
 
             /**
              * @brief Retrieves the coroutine object.
+             * 
              * @return The coroutine object.
              */
             coroutine get_return_object()
@@ -122,6 +129,7 @@ namespace nstd
              * @brief Yields a value from the coroutine.
              * 
              * @param value The value to yield.
+             * 
              * @return A suspend operation.
              */
             std::suspend_always yield_value(int value)
@@ -134,6 +142,7 @@ namespace nstd
              * @brief Returns a value from the coroutine.
              * 
              * @param value The value to return.
+             * 
              * @return A suspend operation.
              */
             std::suspend_always return_value(int value)
@@ -156,6 +165,7 @@ namespace nstd
 
         /**
          * @brief Constructs a coroutine with a given handle.
+         * 
          * @param h The coroutine handle.
          */
         coroutine(handle_type h) : coro(h) {}
@@ -173,7 +183,9 @@ namespace nstd
 
         /**
          * @brief Resumes the coroutine execution.
+         * 
          * @return true if the coroutine was resumed successfully, false if it has finished.
+         * 
          * @throws std::exception if an unhandled exception occurs during execution.
          */
         bool resume()
@@ -192,6 +204,7 @@ namespace nstd
 
         /**
          * @brief Retrieves the current value yielded by the coroutine.
+         * 
          * @return The current value.
          */
         int current_value()
@@ -201,6 +214,7 @@ namespace nstd
 
         /**
          * @brief Retrieves the return value from the coroutine.
+         * 
          * @return The return value.
          */
         int return_value()

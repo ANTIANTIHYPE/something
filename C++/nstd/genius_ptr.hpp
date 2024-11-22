@@ -20,19 +20,21 @@ namespace nstd
         /**
          * @brief Default constructor that initializes an empty genius_ptr.
          */
-        constexpr genius_ptr() : ptr(nullptr), shared_count(new std::atomic<size_t>(0)), weak_count(new std::atomic<size_t>(0)) {}
+        genius_ptr() : ptr(nullptr), shared_count(new std::atomic<size_t>(0)), weak_count(new std::atomic<size_t>(0)) {}
 
         /**
          * @brief Constructs a genius_ptr that takes ownership of the given pointer.
+         * 
          * @param p A pointer to a dynamically allocated object of type `T`.
          */
-        constexpr explicit genius_ptr(T* p) : ptr(p), shared_count(new std::atomic<size_t>(1)), weak_count(new std::atomic<size_t>(0)) {}
+        explicit genius_ptr(T* p) : ptr(p), shared_count(new std::atomic<size_t>(1)), weak_count(new std::atomic<size_t>(0)) {}
 
         /**
          * @brief Copy constructor that creates a genius_ptr sharing ownership with another genius_ptr.
+         * 
          * @param other The genius_ptr to copy from.
          */
-        constexpr genius_ptr(const genius_ptr& other) : ptr(other.ptr), shared_count(other.shared_count), weak_count(other.weak_count)
+        genius_ptr(const genius_ptr& other) : ptr(other.ptr), shared_count(other.shared_count), weak_count(other.weak_count)
         {
             if (ptr)
             {
@@ -42,9 +44,10 @@ namespace nstd
 
         /**
          * @brief Move constructor that transfers ownership from another genius_ptr.
+         * 
          * @param other The genius_ptr to move from.
          */
-        constexpr genius_ptr(genius_ptr&& other) noexcept : ptr(other.ptr), shared_count(other.shared_count), weak_count(other.weak_count)
+        genius_ptr(genius_ptr&& other) noexcept : ptr(other.ptr), shared_count(other.shared_count), weak_count(other.weak_count)
         {
             other.ptr = nullptr;
             other.shared_count = nullptr;
@@ -63,6 +66,7 @@ namespace nstd
          * @brief Copy assignment operator that assigns ownership from another genius_ptr.
          * 
          * @param other The genius_ptr to assign from.
+         * 
          * @return A reference to this genius_ptr.
          */
         constexpr genius_ptr& operator=(const genius_ptr& other)
@@ -85,6 +89,7 @@ namespace nstd
          * @brief Move assignment operator that transfers ownership from another genius_ptr.
          * 
          * @param other The genius_ptr to move from.
+         * 
          * @return A reference to this genius_ptr.
          */
         constexpr genius_ptr& operator=(genius_ptr&& other) noexcept
@@ -106,6 +111,7 @@ namespace nstd
          * @brief Assignment operator that allows assignment from nullptr.
          * 
          * @param nullptr_t A nullptr to assign to this genius_ptr.
+         * 
          * @return A reference to this genius_ptr.
          */
         genius_ptr& operator=(std::nullptr_t) noexcept
@@ -119,24 +125,28 @@ namespace nstd
 
         /**
          * @brief Retrieves the raw pointer managed by the genius_ptr.
+         * 
          * @return A pointer to the managed object.
          */
         constexpr T* get() const { return ptr; }
 
         /**
          * @brief Dereferences the managed pointer to access the object.
+         * 
          * @return A reference to the managed object.
          */
         constexpr T& operator*() const { return *ptr; }
 
         /**
          * @brief Accesses members of the managed object.
+         * 
          * @return A pointer to the managed object.
          */
         constexpr T* operator->() const { return ptr; }
 
         /**
          * @brief Returns the number of shared owners of the managed object.
+         * 
          * @return The number of genius_ptr instances managing the same object.
          */
         constexpr std::size_t use_count() const { return shared_count ? shared_count->load() : 0; }
@@ -154,6 +164,7 @@ namespace nstd
 
             /**
              * @brief Constructs a weak_ptr from a genius_ptr, sharing the ownership.
+             * 
              * @param gptr The genius_ptr to observe.
              */
             constexpr weak_ptr(const genius_ptr<T>& gptr) : ptr(gptr.ptr), shared_count(gptr.shared_count)
@@ -177,12 +188,14 @@ namespace nstd
 
             /**
              * @brief Checks if the managed object has expired (i.e., no shared owners).
+             * 
              * @return true if the managed object has expired, false otherwise.
              */
             constexpr bool expired() const { return !shared_count || shared_count->load() == 0; }
 
             /**
              * @brief Attempts to create a genius_ptr from the weak_ptr.
+             * 
              * @return A genius_ptr to the managed object if it is still valid, otherwise an empty genius_ptr.
              */
             constexpr genius_ptr<T> lock() const
@@ -201,6 +214,7 @@ namespace nstd
 
         /**
          * @brief Creates a weak_ptr from this genius_ptr.
+         * 
          * @return A weak_ptr that observes the managed object.
          */
         constexpr weak_ptr get_weak_ptr() const

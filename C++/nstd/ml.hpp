@@ -54,6 +54,7 @@ namespace nstd
              * @brief Predicts the target value for a given input feature.
              * 
              * @param x The input feature.
+             * 
              * @return The predicted target value.
              */
             constexpr double predict(double x) const
@@ -103,6 +104,7 @@ namespace nstd
              * @brief Predicts the probability of the positive class for a given input feature.
              * 
              * @param x The input feature.
+             * 
              * @return The predicted probability.
              */
             constexpr double predict(double x) const
@@ -114,6 +116,7 @@ namespace nstd
              * @brief Predicts the class label for a given input feature.
              * 
              * @param x The input feature.
+             * 
              * @return The predicted class label (0 or 1).
              */
             constexpr int predict_class(double x) const
@@ -129,6 +132,7 @@ namespace nstd
              * @brief Computes the sigmoid activation function.
              * 
              * @param z The input value.
+             * 
              * @return The output of the sigmoid function.
              */
             constexpr double sigmoid(double z) const
@@ -160,6 +164,7 @@ namespace nstd
         public:
             /**
              * @brief Constructs a DecisionTree object.
+             * 
              * @param max_depth The maximum depth of the tree.
              */
             DecisionTree(int max_depth = 5) : root(nullptr), max_depth(max_depth) {}
@@ -196,6 +201,7 @@ namespace nstd
              * @param x A 2D vector of input features.
              * @param y A vector of target values.
              * @param depth The current depth of the tree.
+             * 
              * @return A pointer to the root node of the constructed subtree.
              */
             TreeNode* buildTree(const std::vector<std::vector<double>>& x, const std::vector<int>& y, int depth)
@@ -273,6 +279,7 @@ namespace nstd
              * @brief Finds the most common label in the provided target values.
              * 
              * @param y A vector of target values.
+             * 
              * @return The most common label.
              */
             constexpr int mostCommonLabel(const std::vector<int>& y) const
@@ -292,6 +299,7 @@ namespace nstd
              * @param parent The parent node's target values.
              * @param left The left child node's target values.
              * @param right The right child node's target values.
+             * 
              * @return The information gain from the split.
              */
             constexpr double informationGain(const std::vector<int>& parent, const std::vector<int>& left, const std::vector<int>& right)
@@ -307,6 +315,7 @@ namespace nstd
              * @brief Calculates the entropy of a set of target values.
              * 
              * @param y A vector of target values.
+             * 
              * @return The entropy value.
              */
             constexpr double entropy(const std::vector<int>& y)
@@ -330,6 +339,7 @@ namespace nstd
              * 
              * @param sample A vector representing the input features.
              * @param node The current node in the tree.
+             * 
              * @return The predicted class label.
              */
             constexpr int predict(const std::vector<double>& sample, TreeNode* node) const
@@ -386,6 +396,7 @@ namespace nstd
              * @brief Predicts the class label for a given input sample.
              * 
              * @param sample A vector representing the input features.
+             * 
              * @return The predicted class label.
              */
             constexpr int predict(const std::vector<double>& sample) const
@@ -489,6 +500,7 @@ namespace nstd
              * @brief Predicts the output for a given input sample.
              * 
              * @param sample A vector representing the input features.
+             * 
              * @return A vector of predicted output values
              */
             constexpr std::vector<double> predict(const std::vector<double>& sample)
@@ -543,6 +555,7 @@ namespace nstd
              * 
              * @param input A vector of input values.
              * @param weights A 2D vector of weights.
+             * 
              * @return A vector of activated output values.
              */
             constexpr std::vector<double> activate(const std::vector<double>& input, const std::vector<std::vector<double>>& weights)
@@ -564,6 +577,7 @@ namespace nstd
              * 
              * @param input A vector of input values.
              * @param biases A vector of bias values.
+             * 
              * @return A vector with biases added.
              */
             constexpr std::vector<double> addBias(const std::vector<double>& input, const std::vector<double>& biases)
@@ -578,6 +592,7 @@ namespace nstd
              * 
              * @param target The target output values.
              * @param output The predicted output values.
+             * 
              * @return A vector of error values.
              */
             constexpr std::vector<double> computeError(const std::vector<double>& target, const std::vector<double>& output)
@@ -596,6 +611,7 @@ namespace nstd
              * @param output_error The error from the output layer.
              * @param weights The weights connecting hidden and output layers.
              * @param hidden_output The output from the hidden layer.
+             * 
              * @return A vector of hidden layer error values.
              */
             constexpr std::vector<double> backpropagate(const std::vector<double>& output_error, const std::vector<std::vector<double>>& weights, const std::vector<double>& hidden_output)
@@ -650,6 +666,7 @@ namespace nstd
              * @brief Computes the sigmoid activation function.
              * 
              * @param x The input value.
+             * 
              * @return The output of the sigmoid function.
              */
             constexpr double sigmoid(double x) const

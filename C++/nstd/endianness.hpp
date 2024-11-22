@@ -17,6 +17,7 @@ namespace nstd
          * @brief Converts a 16-bit integer from host to network byte order.
          * 
          * @param value The 16-bit integer to convert.
+         * 
          * @return The converted 16-bit integer in network byte order.
          */
         constexpr std::uint16_t htons(std::uint16_t value) const
@@ -28,6 +29,7 @@ namespace nstd
          * @brief Converts a 32-bit integer from host to network byte order.
          * 
          * @param value The 32-bit integer to convert.
+         * 
          * @return The converted 32-bit integer in network byte order.
          */
         constexpr std::uint32_t htonl(std::uint32_t value) const
@@ -42,6 +44,7 @@ namespace nstd
          * @brief Converts a 64-bit integer from host to network byte order.
          * 
          * @param value The 64-bit integer to convert.
+         * 
          * @return The converted 64-bit integer in network byte order.
          */
         constexpr std::uint64_t htonll(std::uint64_t value) const
@@ -60,6 +63,7 @@ namespace nstd
          * @brief Converts a 16-bit integer from network to host byte order.
          * 
          * @param value The 16-bit integer to convert.
+         * 
          * @return The converted 16-bit integer in host byte order.
          */
         constexpr std::uint16_t ntohs(std::uint16_t value) const
@@ -71,6 +75,7 @@ namespace nstd
          * @brief Converts a 32-bit integer from network to host byte order.
          * 
          * @param value The 32-bit integer to convert.
+         * 
          * @return The converted 32-bit integer in host byte order.
          */
         constexpr std::uint32_t ntohl(std::uint32_t value) const
@@ -82,6 +87,7 @@ namespace nstd
          * @brief Converts a 64-bit integer from network to host byte order.
          * 
          * @param value The 64-bit integer to convert.
+         * 
          * @return The converted 64-bit integer in host byte order.
          */
         constexpr std::uint64_t ntohll(std::uint64_t value) const

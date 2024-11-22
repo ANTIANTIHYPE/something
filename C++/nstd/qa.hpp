@@ -18,9 +18,10 @@ namespace nstd
     public:
         /**
          * @brief Constructs a QuantumArray with a given size.
+         * 
          * @param n The size of the quantum array.
          */
-        constexpr QuantumArray(int n) : size(n)
+        QuantumArray(int n) : size(n)
         {
             if (n <= 0)
             {
@@ -34,6 +35,7 @@ namespace nstd
          * 
          * @param index The index of the state to set.
          * @param state The complex state to set.
+         * 
          * @throws std::out_of_range if the index is out of bounds.
          */
         constexpr void set(int index, const std::complex<double>& state)
@@ -50,6 +52,7 @@ namespace nstd
          * 
          * @param index The index of the state to get.
          * @return The complex state at the specified index.
+         * 
          * @throws std::out_of_range if the index is out of bounds.
          */
         constexpr std::complex<double> get(int index) const
@@ -65,6 +68,7 @@ namespace nstd
          * @brief Measures the quantum state and outputs the result.
          * 
          * The measurement is probabilistic based on the square of the amplitude of each state.
+         * 
          * @throws std::runtime_error if the norm of the states is zero.
          */
         constexpr void measure()
@@ -101,6 +105,7 @@ namespace nstd
          * @brief Normalizes the quantum states in the array.
          * 
          * This method adjusts the states so that their total probability equals 1.
+         * 
          * @throws std::runtime_error if the norm of the states is zero.
          */
         constexpr void normalize()
@@ -173,6 +178,7 @@ namespace nstd
          * 
          * @param os The output stream.
          * @param array The QuantumArray to output.
+         * 
          * @return A reference to the output stream.
          */
         constexpr friend std::ostream& operator<<(std::ostream& os, const QuantumArray& array)

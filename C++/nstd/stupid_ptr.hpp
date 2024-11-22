@@ -12,31 +12,15 @@ namespace nstd
     public:
         T* ptr;
 
-        /**
-         * @brief Constructs a stupid_ptr with an optional raw pointer.
-         * @param p A raw pointer to an object of type T. Defaults to nullptr.
-         */
         explicit stupid_ptr(T* p = nullptr) : ptr(p) {}
 
-        /**
-         * @brief Destructor for the stupid_ptr.
-         * This destructor does not manage the memory of the raw pointer.
-         */
         ~stupid_ptr() {}
 
-        /**
-         * @brief Dereference operator.
-         * @return Reference to the object of type T.
-         */
         constexpr T& operator*() noexcept
         {
             return *ptr;
         }
 
-        /**
-         * @brief Member access operator.
-         * @return Pointer to the object of type T.
-         */
         constexpr T* operator->() noexcept
         {
             return ptr;

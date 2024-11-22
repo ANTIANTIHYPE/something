@@ -20,9 +20,10 @@ namespace nstd
          * @brief Constructs a bitset from a binary string.
          * 
          * @param bit_str A string representing the bits, consisting of '0's and '1's.
+         * 
          * @throws std::runtime_error if the string is empty or contains invalid characters.
          */
-        constexpr explicit bitset(const std::string& bit_str)
+        explicit bitset(const std::string& bit_str)
         {
             if (bit_str.empty())
             {
@@ -48,13 +49,13 @@ namespace nstd
          * @brief Constructs an empty bitset of a given size.
          * @param size The size of the bitset in bits.
          */
-        constexpr explicit bitset(std::size_t size) : size_(size), data_((size + 63) / 64, 0) {}
+        explicit bitset(std::size_t size) : size_(size), data_((size + 63) / 64, 0) {}
 
         /**
          * @brief Constructs a bitset from an initializer list of booleans.
          * @param bits An initializer list representing the bits.
          */
-        constexpr bitset(std::initializer_list<bool> bits) : size_(bits.size()), data_((size_ + 63) / 64, 0)
+        bitset(std::initializer_list<bool> bits) : size_(bits.size()), data_((size_ + 63) / 64, 0)
         {
             std::size_t index = 0;
             for (bool bit : bits)
@@ -68,6 +69,7 @@ namespace nstd
          * 
          * @param pos The position of the bit to retrieve.
          * @return true if the bit is set, false otherwise.
+         * 
          * @throws std::runtime_error if the position is out of range.
          */
         constexpr bool getBit(std::size_t pos) const
@@ -84,6 +86,7 @@ namespace nstd
          * 
          * @param pos The position of the bit to set.
          * @param value The value to set the bit to (true for 1, false for 0).
+         * 
          * @throws std::runtime_error if the position is out of range.
          */
         constexpr void setBit(std::size_t pos, bool value)
@@ -138,6 +141,7 @@ namespace nstd
          * 
          * @param other The other bitset to AND with.
          * @return A new bitset representing the result of the AND operation.
+         * 
          * @throws std::runtime_error if the sizes of the bitsets do not match.
          */
         constexpr bitset operator&(const bitset& other) const
@@ -159,6 +163,7 @@ namespace nstd
          * 
          * @param other The other bitset to OR with.
          * @return A new bitset representing the result of the OR operation.
+         * 
          * @throws std::runtime_error if the sizes of the bitsets do not match.
          */
         constexpr bitset operator|(const bitset& other) const
@@ -180,6 +185,7 @@ namespace nstd
          * 
          * @param other The other bitset to XOR with.
          * @return A new bitset representing the result of the XOR operation.
+         * 
          * @throws std::runtime_error if the sizes of the bitsets do not match.
          */
         constexpr bitset operator^(const bitset& other) const
