@@ -134,7 +134,7 @@ typedef unsigned int UINT;
 #define CREATE_NEW_CONSOLE                              0x00000010
 
 #define INFINITE                                        0xFFFFFFFF
-#define INFINITE_TIMEOUT                                0xFFFFFFFF
+#define INFINITE_TIMEOUT                                  INFINITE
 
 #define DEFAULT_STACK_SIZE                                 0x10000
 
@@ -499,8 +499,6 @@ BOOL   SetSystemTime            (const SYSTEMTIME * lpSystemTime);
 #define GET_LOW_WORD            (value)            ((DWORD)((value) & 0xFFFFFFFF))
 
 #define TIMEOUT                 (ms)               (WAIT_TIMEOUT + (ms))
-
-#define IS_PROCESS_RUNNING      (pid)              (GetProcessId(pid) != NULL)
 
 #define IS_MEMORY_ALIGNED       (ptr, alignment)   (((uintptr_t)(ptr) % (alignment)) == 0)
 
