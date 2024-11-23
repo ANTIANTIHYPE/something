@@ -4,6 +4,7 @@ namespace nstd
 {
     /**
      * @brief A stupid_ptr implementation that wraps a raw pointer.
+     * 
      * @tparam T The type of the object that the pointer points to.
      */
     template <typename T>

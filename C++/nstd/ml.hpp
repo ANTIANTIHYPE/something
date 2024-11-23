@@ -184,6 +184,7 @@ namespace nstd
              * @brief Predicts the class label for a given input sample.
              * 
              * @param sample A vector representing the input features.
+             * 
              * @return The predicted class label.
              */
             constexpr int predict(const std::vector<double>& sample) const
