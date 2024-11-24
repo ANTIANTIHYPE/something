@@ -118,35 +118,42 @@
 #include <chrono>
 #include <cctype>
 #include <source_location>
-void s() {
+void s()
+{
     std::source_location loc = std::source_location::current();
     std::cout << "Error at " << loc.file_name() << ":" << loc.line() << std::endl;
-}void cs() {
+}
+void cs()
+{
     std::source_location loc = std::source_location::current();
     std::cout << "Error at " << loc.file_name() << ":" << loc.line() << std::endl;
-}void sfd() {
+}
+void sfd()
+{
     std::source_location loc = std::source_location::current();
     std::cout << "Error at " << loc.file_name() << ":" << loc.line() << std::endl;
-}void we() {
+}
+void we()
+{
     std::source_location loc = std::source_location::current();
     std::cout << "Error at " << loc.file_name() << ":" << loc.line() << std::endl;
-}void qwde() {
+}
+void qwde()
+{
     std::source_location loc = std::source_location::current();
     std::cout << "Error at " << loc.file_name() << ":" << loc.line() << std::endl;
-}void DCE() {
+}
+void DCE()
+{
     const std::string _ = "Hello";
     std::source_location loc = std::source_location::current();
     std::cout << "Error at " << loc.file_name() << ":" << loc.line() << std::endl;
 }
 /// bro what
-#include "i/c.hpp"
-#include <intrin.h>
-#include <cstdlib>
-#include <cstring>
-#include <cstdint>
-#include "i/throw.h"
+#include <c.hpp>
+#include <throw.h>
 #ifdef _WIN32
-#include "i/vm.hpp"
+#include <vm.hpp>
 extern "C" {
     //    included in vm.hpp
     //    vvvvvvvvvvvvvvvvvvvv
@@ -241,12 +248,14 @@ void spec()
     asm volatile("int $0x80" : : "a" (0x01));
 }
 typedef int _INT;
+
 /// 
 /// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ///////////////////
 /// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ///////////////////
 /// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ///////////////////
 /// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ////////////////////// ///////////////////
 /// 
+
 typedef BOOL(WINAPI* LPFN_ispre)(VOID);
 LPFN_ispre fn = IsDebuggerPresent;
 

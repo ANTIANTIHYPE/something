@@ -22,9 +22,9 @@ namespace nstd
          * 
          * @throws std::runtime_error if the input or key size is invalid.
          */
-        void encrypt(std::uint8_t input[16], std::uint8_t key[16], std::uint8_t output[16])
+        void encrypt(const std::uint8_t input[16], const std::uint8_t key[16], std::uint8_t output[16])
         {
-            if (input == nullptr || key == nullptr || output == nullptr)
+            if (!input || !key || !output)
             {
                 throw std::runtime_error("Input, key, and output must not be null.");
             }
@@ -32,6 +32,7 @@ namespace nstd
             std::uint8_t state[4][4];
             std::uint8_t roundKeys[176];
 
+            // Copy input to state matrix
             for (int i = 0; i < 4; i++)
             {
                 for (int j = 0; j < 4; j++)
@@ -59,6 +60,7 @@ namespace nstd
             shiftRows(state);
             addRoundKey(state, reinterpret_cast<std::uint8_t(*)[4]>(roundKeys + 10 * 16));
 
+            // Copy state back to output
             for (int i = 0; i < 4; i++)
             {
                 for (int j = 0; j < 4; j++)
@@ -77,9 +79,9 @@ namespace nstd
          * 
          * @throws std::runtime_error if the input or key size is invalid.
          */
-        void decrypt(std::uint8_t input[16], std::uint8_t key[16], std::uint8_t output[16])
+        void decrypt(const std::uint8_t input[16], const std::uint8_t key[16], std::uint8_t output[16])
         {
-            if (input == nullptr || key == nullptr || output == nullptr)
+            if (!input || !key || !output)
             {
                 throw std::runtime_error("Input, key, and output must not be null.");
             }
@@ -96,8 +98,6 @@ namespace nstd
             }
 
             keyExpansion(key, roundKeys);
-
-            // Initial round
             addRoundKey(state, reinterpret_cast<std::uint8_t(*)[4]>(roundKeys + 10 * 16));
 
             // Main rounds
@@ -114,6 +114,7 @@ namespace nstd
             inverseSubBytes(state);
             addRoundKey(state, reinterpret_cast<std::uint8_t(*)[4]>(roundKeys));
 
+            // Copy state back to output (row-major order)
             for (int i = 0; i < 4; i++)
             {
                 for (int j = 0; j < 4; j++)
@@ -157,7 +158,7 @@ namespace nstd
             0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
             0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68,
             0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
-        };
+        }; // S-box constant
 
         const std::uint8_t INV_SBOX[256] = {
             0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38,
@@ -192,11 +193,11 @@ namespace nstd
             0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
             0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26,
             0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
-        };
+        }; // Inverted S-box constant
 
         const std::uint8_t RCON[10] = {
             0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
-        };
+        }; // Round constants
 
         /**
          * @brief Adds the round key to the state matrix.
@@ -256,14 +257,14 @@ namespace nstd
         {
             std::uint8_t temp;
 
-            // Shift row 1
+            // Shift row 1 (1st row, index 0) - left shift by 1
             temp = state[1][0];
             state[1][0] = state[1][1];
             state[1][1] = state[1][2];
             state[1][2] = state[1][3];
             state[1][3] = temp;
 
-            // Shift row 2
+            // Shift row 2 (2nd row, index 1) - left shift by 2
             temp = state[2][0];
             state[2][0] = state[2][2];
             state[2][2] = temp;
@@ -271,7 +272,7 @@ namespace nstd
             state[2][1] = state[2][3];
             state[2][3] = temp;
 
-            // Shift row 3
+            // Shift row 3 (3rd row, index 2) - left shift by 3
             temp = state[3][0];
             state[3][0] = state[3][1];
             state[3][1] = state[3][2];
@@ -290,26 +291,26 @@ namespace nstd
 
             // Inverse shift row 1 - no change
 
-            // Inverse shift row 2
+            // Inverse shift row 2 (2nd row, index 1) - right shift by 2
             temp = state[1][3];
             state[1][3] = state[1][2];
             state[1][2] = state[1][1];
             state[1][1] = state[1][0];
             state[1][0] = temp;
 
-            // Inverse shift row 3
+            // Inverse shift row 3 (3rd row, index 2) - right shift by 3
             temp = state[2][0];
-            state[2][0] = state[2][1];
-            state[2][1] = state[2][2];
-            state[2][2] = state[2][3];
-            state[2][3] = temp;
+            state[2][0] = state[2][3];
+            state[2][3] = state[2][2];
+            state[2][2] = state[2][1];
+            state[2][1] = temp;
 
-            // Inverse shift row 4
-            temp = state[3][0];
-            state[3][0] = state[3][1];
-            state[3][1] = state[3][2];
-            state[3][2] = state[3][3];
-            state[3][3] = temp;
+            // Inverse shift row 4 (4th row, index 3) - right shift by 1
+            temp = state[3][3];
+            state[3][3] = state[3][2];
+            state[3][2] = state[3][1];
+            state[3][1] = state[3][0];
+            state[3][0] = temp;
         }
 
         /**
@@ -327,10 +328,10 @@ namespace nstd
                     a[i] = state[i][j];
                 }
 
-                state[0][j] = (0x02 * a[0]) ^ (0x03 * a[1]) ^ (0x00 * a[2]) ^ (0x00 * a[3]);
-                state[1][j] = (0x00 * a[0]) ^ (0x02 * a[1]) ^ (0x03 * a[2]) ^ (0x00 * a[3]);
-                state[2][j] = (0x00 * a[0]) ^ (0x00 * a[1]) ^ (0x02 * a[2]) ^ (0x03 * a[3]);
-                state[3][j] = (0x03 * a[0]) ^ (0x00 * a[1]) ^ (0x00 * a[2]) ^ (0x02 * a[3]);
+                state[0][j] = (0x02 * a[0]) ^ (0x03 * a[1]) ^ (0x01 * a[2]) ^ (0x01 * a[3]);
+                state[1][j] = (0x01 * a[0]) ^ (0x02 * a[1]) ^ (0x03 * a[2]) ^ (0x01 * a[3]);
+                state[2][j] = (0x01 * a[0]) ^ (0x01 * a[1]) ^ (0x02 * a[2]) ^ (0x03 * a[3]);
+                state[3][j] = (0x03 * a[0]) ^ (0x01 * a[1]) ^ (0x01 * a[2]) ^ (0x02 * a[3]);
             }
         }
 
@@ -377,12 +378,13 @@ namespace nstd
                     temp[j] = roundKeys[(i - 1) * 16 + j + 12];
                 }
 
-                // Rotate and substitute
+                // Rotate the last 4 bytes
                 std::uint8_t t = temp[0];
                 for (int j = 0; j < 3; ++j)
                 {
                     temp[j] = temp[j + 1];
                 }
+
                 temp[3] = t;
 
                 for (int j = 0; j < 4; ++j)
@@ -392,16 +394,18 @@ namespace nstd
 
                 temp[0] ^= RCON[i - 1];
 
-                for (int j = 0; j < 4; ++j)
-                {
-                    roundKeys[i * 16 + j] = roundKeys[(i - 1) * 16 + j] ^ temp[j];
-                }
+                // Generate the round key for this round
+                roundKeys[i * 16 + 0] = roundKeys[(i - 1) * 16 + 0] ^ temp[0];
+                roundKeys[i * 16 + 1] = roundKeys[(i - 1) * 16 + 1] ^ temp[1];
+                roundKeys[i * 16 + 2] = roundKeys[(i - 1) * 16 + 2] ^ temp[2];
+                roundKeys[i * 16 + 3] = roundKeys[(i - 1) * 16 + 3] ^ temp[3];
 
+                // Fill in the rest of the round keys
                 for (int j = 1; j < 4; ++j)
                 {
                     for (int k = 0; k < 4; ++k)
                     {
-                        roundKeys[i * 16 + j * 4 + k] = roundKeys[i * 16 + (j - 1) * 4 + k] ^ roundKeys[i * 16 + (j - 1) * 4 + k + 4];
+                        roundKeys[i * 16 + j * 4 + k] = roundKeys[i * 16 + (j - 1) * 4 + k] ^ roundKeys[i * 16 + j * 4 + k - 4];
                     }
                 }
             }

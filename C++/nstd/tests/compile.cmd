@@ -22,12 +22,14 @@ set "name=build"
 if not exist "%name%" (
     mkdir "%name%" || (
         echo Failed to create directory "%name%"
+        pause
         exit /b 1
     )
 )
 
 cd "%name%" || (
     echo Failed to change directory to "%name%"
+    pause
     exit /b 1
 )
 
@@ -35,8 +37,9 @@ for /L %%i in (0,1,%count%) do (
     set "file=!tests[%%i]!"
     if defined file (
         echo Compiling !file!.cpp...
-        g++ -o !file! ..\!file!.cpp --std=c++2b -O3 -I..\.. || (
+        g++ -o !file! ..\!file!.cpp --std=c++2b -O3 -Wall -I..\.. || (
             echo Compilation failed for !file!.cpp
+            pause
             exit /b 1
         )
     )

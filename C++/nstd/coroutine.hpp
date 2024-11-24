@@ -4,29 +4,15 @@
 #include <iostream>
 #include <functional>
 #include <exception>
+
 #if __cplusplus > 201703L
+
 #include <coroutine>
+
 #endif // ^^^ C++20 ^^^
 
 namespace nstd
 {
-    /**
-     * @brief Exception class for coroutine errors.
-     */
-    class CoroutineException : public std::exception
-    {
-    public:
-        /**
-         * @brief Returns a description of the exception.
-         * 
-         * @return A C-style string describing the error.
-         */
-        const char* what() const noexcept override
-        {
-            return "Coroutine exception occurred";
-        }
-    };
-
     /**
      * @brief Abstract base class for coroutines.
      */
@@ -84,8 +70,8 @@ namespace nstd
         }
 
     private:
-        std::function<void()> func_;
-        bool finished_;
+        std::function<void()> func_; // The function to be executed by the coroutine.
+        bool finished_;              // Indicates whether the coroutine has finished execution.
     };
 
 #else // ^^^ C++98 to C++17 ^^^ VVV C++20 VVV
@@ -97,9 +83,9 @@ namespace nstd
     {
         struct promise_type
         {
-            int current_value;
-            int return_value_;
-            std::exception_ptr exception_;
+            int current_value;             // The current value yielded by the coroutine.
+            int return_value_;             // The value returned from the coroutine upon completion.
+            std::exception_ptr exception_; // Holds a pointer to any unhandled exception that may occur during the execution of the coroutine.
 
             /**
              * @brief Provides the initial suspend behavior of the coroutine.
@@ -161,7 +147,7 @@ namespace nstd
         };
 
         using handle_type = std::coroutine_handle<promise_type>;
-        handle_type coro;
+        handle_type coro; // The coroutine handle that manages the execution of the coroutine.
 
         /**
          * @brief Constructs a coroutine with a given handle.
@@ -224,6 +210,24 @@ namespace nstd
     };
 
 #endif // ^^^ C++20 ^^^
+
+    /**
+     * @brief Exception class for coroutine errors.
+     */
+    class CoroutineException : public std::exception
+    {
+    public:
+        /**
+         * @brief Returns a description of the exception.
+         * 
+         * @return A C-style string describing the error.
+         */
+        const char* what() const noexcept override
+        {
+            return "Coroutine exception occurred";
+        }
+    };
+
 } // namespace nstd
 
 #endif // COROUTINE_HPP

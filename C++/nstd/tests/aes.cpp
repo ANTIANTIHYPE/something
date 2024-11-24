@@ -5,12 +5,13 @@
 
 void printArray(const std::uint8_t* array, std::size_t size) 
 {
-    for (size_t i = 0; i < size; ++i)
+    for (std::size_t i = 0; i < size; ++i)
     {
         std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(array[i]) << " ";
     }
     std::cout << std::dec << std::endl;
 }
+
 
 void test()
 {
@@ -36,8 +37,17 @@ void test()
     printArray(decryptedOutput.data(), decryptedOutput.size());
 }
 
+
 int main()
 {
-    test();
+    try
+    {
+        test();
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
     return 0;
 }

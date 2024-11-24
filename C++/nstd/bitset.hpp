@@ -8,10 +8,6 @@ namespace nstd
 {
     /**
      * @brief A dynamic bitset implementation.
-     * 
-     * The `bitset` class allows manipulation of a sequence of bits with support for
-     * bitwise operations, resizing, and initialization from binary strings or
-     * initializer lists.
      */
     class bitset
     {
@@ -29,6 +25,7 @@ namespace nstd
             {
                 throw std::runtime_error("Empty bitset");
             }
+
             size_ = bit_str.size();
             data_.resize((size_ + 63) / 64, 0);
 
@@ -47,12 +44,14 @@ namespace nstd
 
         /**
          * @brief Constructs an empty bitset of a given size.
+         * 
          * @param size The size of the bitset in bits.
          */
         explicit bitset(std::size_t size) : size_(size), data_((size + 63) / 64, 0) {}
 
         /**
          * @brief Constructs a bitset from an initializer list of booleans.
+         * 
          * @param bits An initializer list representing the bits.
          */
         bitset(std::initializer_list<bool> bits) : size_(bits.size()), data_((size_ + 63) / 64, 0)
@@ -68,6 +67,7 @@ namespace nstd
          * @brief Retrieves the value of a bit at a given position.
          * 
          * @param pos The position of the bit to retrieve.
+         * 
          * @return true if the bit is set, false otherwise.
          * 
          * @throws std::runtime_error if the position is out of range.
@@ -107,6 +107,7 @@ namespace nstd
 
         /**
          * @brief Converts the bitset to a string representation.
+         * 
          * @return A string representing the bits, with '1's and '0's.
          */
         constexpr std::string toString() const
@@ -119,19 +120,19 @@ namespace nstd
                     result[i] = '1';
                 }
             }
+
             return result;
         }
 
         /**
          * @brief Resizes the bitset to a new size.
+         * 
          * @param newSize The new size of the bitset in bits.
          */
         constexpr void resize(std::size_t newSize)
         {
-            if (newSize == size_)
-            {
-                return;
-            }
+            if (newSize == size_) return;
+
             size_ = newSize;
             data_.resize((newSize + 63) / 64, 0);
         }
@@ -140,7 +141,8 @@ namespace nstd
          * @brief Performs a bitwise AND operation with another bitset.
          * 
          * @param other The other bitset to AND with.
-         * @return A new bitset representing the result of the AND operation.
+         * 
+         * @return A new bit set representing the result of the AND operation.
          * 
          * @throws std::runtime_error if the sizes of the bitsets do not match.
          */
@@ -150,7 +152,9 @@ namespace nstd
             {
                 throw std::runtime_error("Bitsets must be of the same size for AND operation");
             }
+
             bitset result(size_);
+
             for (std::size_t i = 0; i < data_.size(); ++i)
             {
                 result.data_[i] = data_[i] & other.data_[i];
@@ -162,6 +166,7 @@ namespace nstd
          * @brief Performs a bitwise OR operation with another bitset.
          * 
          * @param other The other bitset to OR with.
+         * 
          * @return A new bitset representing the result of the OR operation.
          * 
          * @throws std::runtime_error if the sizes of the bitsets do not match.
@@ -172,7 +177,9 @@ namespace nstd
             {
                 throw std::runtime_error("Bitsets must be of the same size for OR operation");
             }
+
             bitset result(size_);
+
             for (std::size_t i = 0; i < data_.size(); ++i)
             {
                 result.data_[i] = data_[i] | other.data_[i];
@@ -184,6 +191,7 @@ namespace nstd
          * @brief Performs a bitwise XOR operation with another bitset.
          * 
          * @param other The other bitset to XOR with.
+         * 
          * @return A new bitset representing the result of the XOR operation.
          * 
          * @throws std::runtime_error if the sizes of the bitsets do not match.
@@ -194,7 +202,9 @@ namespace nstd
             {
                 throw std::runtime_error("Bitsets must be of the same size for XOR operation");
             }
+
             bitset result(size_);
+
             for (std::size_t i = 0; i < data_.size(); ++i)
             {
                 result.data_[i] = data_[i] ^ other.data_[i];
@@ -204,38 +214,32 @@ namespace nstd
 
         /**
          * @brief Checks if the bitset is empty (size is zero).
+         * 
          * @return true if the bitset is empty, false otherwise.
          */
-        constexpr bool empty() const
-        {
-            return size_ == 0;
-        }
+        const bool empty() const { return size_ == 0; }
 
         /**
          * @brief Retrieves the size of the bitset.
+         * 
          * @return The size of the bitset in bits.
          */
-        constexpr std::size_t size() const
-        {
-            return size_;
-        }
+        const std::size_t size() const { return size_; }
 
     private:
-        std::size_t size_;
-        std::vector<std::uint64_t> data_;
+        std::size_t size_; // The size of the bitset in bits.
+        std::vector<std::uint64_t> data_; // A vector storing the bits as 64-bit unsigned integers.
     }; // class bitset
 
     /**
      * @brief Exception thrown for invalid bitset operations.
-     * 
-     * The `invalid_bitset` class extends std::runtime_error to indicate that
-     * a provided string or operation does not conform to valid bitset rules.
      */
     class invalid_bitset : public std::runtime_error
     {
     public:
         /**
          * @brief Constructs an invalid_bitset exception with a message.
+         * 
          * @param what A description of the invalid operation or string.
          */
         invalid_bitset(const std::string& what) : std::runtime_error(what + " is not a valid bitset.") {}

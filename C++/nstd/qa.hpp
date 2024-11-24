@@ -2,15 +2,12 @@
 
 #include <iostream>
 #include <complex>
-#include <stdexcept>
 #include <random>
 
 namespace nstd
 {
     /**
-     * @brief A class representing a quantum array of complex states.
-     * 
-     * The `QuantumArray` class allows for the representation and manipulation of quantum states
+     * A class for the representation and manipulation of quantum states
      * using complex numbers.
      */
     class QuantumArray
@@ -31,6 +28,16 @@ namespace nstd
         }
 
         /**
+         * @brief Initializes the quantum array to a specific state.
+         * 
+         * @param state The complex state to set all elements to.
+         */
+        void initialize(const std::complex<double>& state)
+        {
+            std::fill(states.begin(), states.end(), state);
+        }
+
+        /**
          * @brief Sets the state at a specific index.
          * 
          * @param index The index of the state to set.
@@ -38,7 +45,7 @@ namespace nstd
          * 
          * @throws std::out_of_range if the index is out of bounds.
          */
-        constexpr void set(int index, const std::complex<double>& state)
+        void set(int index, const std::complex<double>& state)
         {
             if (index < 0 || index >= size)
             {
@@ -51,11 +58,12 @@ namespace nstd
          * @brief Gets the state at a specific index.
          * 
          * @param index The index of the state to get.
+         * 
          * @return The complex state at the specified index.
          * 
          * @throws std::out_of_range if the index is out of bounds.
          */
-        constexpr std::complex<double> get(int index) const
+        std::complex<double> get(int index) const
         {
             if (index < 0 || index >= size)
             {
@@ -71,7 +79,7 @@ namespace nstd
          * 
          * @throws std::runtime_error if the norm of the states is zero.
          */
-        constexpr void measure()
+        void measure()
         {
             double norm = 0.0;
             for (const std::complex<double>& state : states)
@@ -108,7 +116,7 @@ namespace nstd
          * 
          * @throws std::runtime_error if the norm of the states is zero.
          */
-        constexpr void normalize()
+        void normalize()
         {
             double norm = 0.0;
             for (const std::complex<double>& state : states)
@@ -127,11 +135,43 @@ namespace nstd
         }
 
         /**
+         * @brief Applies the Hadamard gate to the quantum states.
+         * 
+         * The Hadamard gate transforms the states into superpositions.
+         */
+        void Hadamard()
+        {
+            for (int i = 0; i < size; ++i)
+            {
+                std::complex<double> state = states[i];
+                states[i] = (state + states[i ^ 1]) / std::sqrt(2.0); // Assuming size is a power of 2
+            }
+        }
+
+        /**
+         * @brief Applies the Pauli-X gate to the quantum states.
+         * 
+         * The Pauli-X gate flips the state at the specified index.
+         * 
+         * @param index The index of the state to flip.
+         * 
+         * @throws std::out_of_range if the index is out of bounds.
+         */
+        void PauliX(int index)
+        {
+            if (index < 0 || index >= size)
+            {
+                throw std::out_of_range("Index out of range");
+            }
+            states[index] = states[index] == std::complex<double>(0, 0) ? std::complex<double>(1, 0) : std::complex<double>(0, 0);
+        }
+
+        /**
          * @brief Prints the quantum states.
          * 
          * Outputs the index and value of each state in the quantum array.
          */
-        constexpr void print() const
+        void print() const
         {
             for (int i = 0; i < size; ++i)
             {
@@ -142,17 +182,17 @@ namespace nstd
         /**
          * @brief Copy constructor
          */
-        constexpr QuantumArray(const QuantumArray& other) : states(other.states), size(other.size) {}
+        QuantumArray(const QuantumArray& other) : states(other.states), size(other.size) {}
 
         /**
          * @brief Move constructor
          */
-        constexpr QuantumArray(QuantumArray&& other) noexcept : states(std::move(other.states)), size(other.size) 
+        QuantumArray(QuantumArray&& other) noexcept : states(std::move(other.states)), size(other.size) 
         {
             other.size = 0;
         }
 
-        constexpr QuantumArray& operator=(const QuantumArray& other) noexcept
+        QuantumArray& operator=(const QuantumArray& other) noexcept
         {
             if (this != &other)
             {
@@ -162,7 +202,7 @@ namespace nstd
             return *this;
         }
 
-        constexpr QuantumArray& operator=(QuantumArray&& other) noexcept
+        QuantumArray& operator=(QuantumArray&& other) noexcept
         {
             if (this != &other)
             {
@@ -181,7 +221,7 @@ namespace nstd
          * 
          * @return A reference to the output stream.
          */
-        constexpr friend std::ostream& operator<<(std::ostream& os, const QuantumArray& array)
+        friend std::ostream& operator<<(std::ostream& os, const QuantumArray& array)
         {
             for (int i = 0; i < array.size; ++i)
             {
@@ -191,7 +231,7 @@ namespace nstd
         }
 
     private:
-        std::vector<std::complex<double>> states;
-        int size;
+        std::vector<std::complex<double>> states; // Vector to hold the complex states of the quantum array
+        int size;                                 // The number of states in the quantum array
     }; // class QuantumArray
 } // namespace nstd

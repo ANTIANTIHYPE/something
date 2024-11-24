@@ -6,10 +6,7 @@
 namespace nstd
 {
     /**
-     * @brief A smart pointer that manages the lifetime of a dynamically allocated object.
-     * 
-     * The `genius_ptr` class implements a shared ownership model with atomic reference counting.
-     * It allows multiple pointers to share ownership of a single dynamically allocated object.
+     * @brief weak_ptr, smart_ptr and shared_ptr combined
      * 
      * @tparam T The type of the object managed by the smart pointer.
      */
@@ -20,25 +17,25 @@ namespace nstd
         /**
          * @brief Default constructor that initializes an empty genius_ptr.
          */
-        genius_ptr() : ptr(nullptr), shared_count(new std::atomic<size_t>(0)), weak_count(new std::atomic<size_t>(0)) {}
+        genius_ptr() noexcept : ptr(nullptr), shared_count(0), weak_count(0) {}
 
         /**
          * @brief Constructs a genius_ptr that takes ownership of the given pointer.
          * 
          * @param p A pointer to a dynamically allocated object of type `T`.
          */
-        explicit genius_ptr(T* p) : ptr(p), shared_count(new std::atomic<size_t>(1)), weak_count(new std::atomic<size_t>(0)) {}
+        explicit genius_ptr(T* p) noexcept : ptr(p), shared_count(1), weak_count(0) {}
 
         /**
          * @brief Copy constructor that creates a genius_ptr sharing ownership with another genius_ptr.
          * 
          * @param other The genius_ptr to copy from.
          */
-        genius_ptr(const genius_ptr& other) : ptr(other.ptr), shared_count(other.shared_count), weak_count(other.weak_count)
+        genius_ptr(const genius_ptr& other) noexcept : ptr(other.ptr), shared_count(other.shared_count.load()), weak_count(other.weak_count.load())
         {
             if (ptr)
             {
-                (*shared_count)++;
+                shared_count.fetch_add(1);
             }
         }
 
@@ -47,17 +44,17 @@ namespace nstd
          * 
          * @param other The genius_ptr to move from.
          */
-        genius_ptr(genius_ptr&& other) noexcept : ptr(other.ptr), shared_count(other.shared_count), weak_count(other.weak_count)
+        genius_ptr(genius_ptr&& other) noexcept : ptr(other.ptr), shared_count(other.shared_count.load()), weak_count(other.weak_count.load())
         {
             other.ptr = nullptr;
-            other.shared_count = nullptr;
-            other.weak_count = nullptr;
+            other.shared_count = 0;
+            other.weak_count = 0;
         }
 
         /**
          * @brief Destructor that releases the managed object if this is the last owner.
          */
-        ~genius_ptr() 
+        ~genius_ptr() noexcept
         {
             release();
         }
@@ -69,17 +66,17 @@ namespace nstd
          * 
          * @return A reference to this genius_ptr.
          */
-        constexpr genius_ptr& operator=(const genius_ptr& other)
+        genius_ptr& operator=(const genius_ptr& other) noexcept
         {
             if (this != &other)
             {
                 release();
                 ptr = other.ptr;
-                shared_count = other.shared_count;
-                weak_count = other.weak_count;
+                shared_count = other.shared_count.load();
+                weak_count = other.weak_count.load();
                 if (ptr)
                 {
-                    (*shared_count)++;
+                    shared_count.fetch_add(1);
                 }
             }
             return *this;
@@ -92,17 +89,17 @@ namespace nstd
          * 
          * @return A reference to this genius_ptr.
          */
-        constexpr genius_ptr& operator=(genius_ptr&& other) noexcept
+        genius_ptr& operator=(genius_ptr&& other) noexcept
         {
             if (this != &other)
             {
                 release();
                 ptr = other.ptr;
-                shared_count = other.shared_count;
-                weak_count = other.weak_count;
+                shared_count = other.shared_count.load();
+                weak_count = other.weak_count.load();
                 other.ptr = nullptr;
-                other.shared_count = nullptr;
-                other.weak_count = nullptr;
+                other.shared_count = 0;
+                other.weak_count = 0;
             }
             return *this;
         }
@@ -118,8 +115,8 @@ namespace nstd
         {
             release();
             ptr = nullptr;
-            shared_count = new std::atomic<size_t>(0);
-            weak_count = new std::atomic<size_t>(0);
+            shared_count = 0;
+            weak_count = 0;
             return *this;
         }
 
@@ -128,61 +125,62 @@ namespace nstd
          * 
          * @return A pointer to the managed object.
          */
-        constexpr T* get() const { return ptr; }
+        constexpr T* get() const noexcept { return ptr; }
 
         /**
          * @brief Dereferences the managed pointer to access the object.
          * 
          * @return A reference to the managed object.
          */
-        constexpr T& operator*() const { return *ptr; }
+        constexpr T& operator*() const noexcept { return *ptr; }
 
         /**
          * @brief Accesses members of the managed object.
          * 
          * @return A pointer to the managed object.
          */
-        constexpr T* operator->() const { return ptr; }
+        constexpr T* operator->() const noexcept { return ptr; }
 
         /**
          * @brief Returns the number of shared owners of the managed object.
          * 
          * @return The number of genius_ptr instances managing the same object.
          */
-        constexpr std::size_t use_count() const { return shared_count ? shared_count->load() : 0; }
+        constexpr std::size_t use_count() const noexcept { return shared_count.load(); }
 
         /**
          * @brief A weak pointer that can observe the managed object without taking ownership.
          */
+
         class weak_ptr
         {
         public:
             /**
              * @brief Default constructor that initializes an empty weak_ptr.
              */
-            constexpr weak_ptr() : ptr(nullptr), shared_count(nullptr) {}
+            weak_ptr() noexcept : ptr(nullptr), shared_count(nullptr) {}
 
             /**
              * @brief Constructs a weak_ptr from a genius_ptr, sharing the ownership.
              * 
              * @param gptr The genius_ptr to observe.
              */
-            constexpr weak_ptr(const genius_ptr<T>& gptr) : ptr(gptr.ptr), shared_count(gptr.shared_count)
+            weak_ptr(genius_ptr<T>& gptr) noexcept : ptr(gptr.ptr), shared_count(&gptr.shared_count)
             {
                 if (shared_count)
                 {
-                    (*shared_count)++;
+                    shared_count->fetch_add(1, std::memory_order_relaxed);
                 }
             }
 
             /**
              * @brief Destructor that decrements the weak count.
              */
-            ~weak_ptr()
+            ~weak_ptr() noexcept
             {
-                if (shared_count && --(*shared_count) == 0)
+                if (shared_count && shared_count->fetch_sub(1, std::memory_order_relaxed) == 1)
                 {
-                    delete shared_count;
+                    shared_count = nullptr; // Avoid dangling pointer
                 }
             }
 
@@ -191,14 +189,14 @@ namespace nstd
              * 
              * @return true if the managed object has expired, false otherwise.
              */
-            constexpr bool expired() const { return !shared_count || shared_count->load() == 0; }
+            constexpr bool expired() const noexcept { return !shared_count || shared_count->load() == 0; }
 
             /**
              * @brief Attempts to create a genius_ptr from the weak_ptr.
              * 
              * @return A genius_ptr to the managed object if it is still valid, otherwise an empty genius_ptr.
              */
-            constexpr genius_ptr<T> lock() const
+            constexpr genius_ptr<T> lock() const noexcept
             {
                 if (expired())
                 {
@@ -208,8 +206,8 @@ namespace nstd
             }
 
         private:
-            T* ptr;
-            std::atomic<std::size_t>* shared_count;
+            T* ptr;                                   // Pointer to the managed object.
+            std::atomic<size_t>* shared_count;        // Pointer to the shared count.
         };
 
         /**
@@ -217,26 +215,26 @@ namespace nstd
          * 
          * @return A weak_ptr that observes the managed object.
          */
-        constexpr weak_ptr get_weak_ptr() const
+        constexpr weak_ptr get_weak_ptr() noexcept
         {
             return weak_ptr(*this);
         }
 
     private:
-        T* ptr;
-        std::atomic<size_t>* shared_count;
-        std::atomic<size_t>* weak_count;
+        T* ptr;                           // Pointer to the managed object.
+        std::atomic<size_t> shared_count; // Atomic count of shared owners.
+        std::atomic<size_t> weak_count;   // Atomic count of weak owners.
 
         /**
          * @brief Releases the managed object and decrements the reference counts.
          */
-        constexpr void release()
+        void release() noexcept
         {
-            if (shared_count && --(*shared_count) == 0)
+            if (shared_count.fetch_sub(1) == 1)
             {
                 delete ptr;
-                delete shared_count;
-                delete weak_count;
+                shared_count = 0;
+                weak_count = 0; // Avoid dangling pointer
             }
         }
     }; // class genius_ptr
