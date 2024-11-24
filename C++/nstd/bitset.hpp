@@ -227,7 +227,7 @@ namespace nstd
         const std::size_t size() const { return size_; }
 
     private:
-        std::size_t size_; // The size of the bitset in bits.
+        std::size_t size_;                // The size of the bitset in bits.
         std::vector<std::uint64_t> data_; // A vector storing the bits as 64-bit unsigned integers.
     }; // class bitset
 

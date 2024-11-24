@@ -31,7 +31,7 @@ int main()
     std::cout << "Random Forest Prediction for {3, 2}: " << rf.predict({3, 2}) << std::endl; // Actual output: 1
     std::cout << "Random Forest Prediction for {5, 5}: " << rf.predict({5, 5}) << std::endl; // Expected: 1
 
-    // NeuralNetwork doesn't print out anything (???)
+    // NeuralNetwork don't print out anything (???)
 
     // std::cout << "\n=== Neural Network Test ===" << std::endl;
     // nstd::ML::NeuralNetwork nn(2, 3, 1); // 2 input features, 3 hidden neurons, 1 output

@@ -505,7 +505,7 @@ namespace nstd
         private:
             int n_trees;                          // Number of trees in the forest.
             int max_depth;                        // Maximum depth of each tree.
-            std::vector<DecisionTree> trees;     // Vector of decision trees.
+            std::vector<DecisionTree> trees;      // Vector of decision trees.
 
             /**
              * @brief Creates a bootstrap sample from the provided data.
