@@ -3,13 +3,17 @@
 #include <string>
 
 #ifdef _WIN32
-    #define NOMINMAX
-    #include <Windows.h>
+
+#define NOMINMAX
+#include <Windows.h>
+
 #endif
 
-class Color {
+class Color
+{
 public:
-    enum Code {
+    enum Code 
+    {
         RED = 31,
         GREEN = 32,
         YELLOW = 33,
@@ -18,17 +22,10 @@ public:
         DEFAULT = 39,
     };
 
-    static std::string colorize(const std::string& text, Code code, bool bold = false) {
-#ifdef _WIN32
-        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        DWORD dwMode = 0;
-        GetConsoleMode(hConsole, &dwMode);
-        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        SetConsoleMode(hConsole, dwMode);
-#endif
+    static std::string colorize(const std::string& text, Code code, bool bold = false)
+    {
         std::string ansiCode = "\x1B[";
-        if (bold)
-            ansiCode += "1;";
+        if (bold) ansiCode += "1;";
         ansiCode += std::to_string(code) + "m";
         return ansiCode + text + "\x1B[0m";
     }

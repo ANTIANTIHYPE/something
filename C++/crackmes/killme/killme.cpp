@@ -109,7 +109,6 @@
       /* +-------------------------------------+ */
 
 #include <iostream>
-#include <string>
 #include <memory>
 #include <fstream>
 #include <limits>
@@ -151,10 +150,23 @@ void DCE()
 }
 /// bro what
 #include <c.hpp>
+int init()
+{
+#ifdef _WIN32
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD dwMode = 0;
+    GetConsoleMode(hConsole, &dwMode);
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(hConsole, dwMode);
+    return 0;
+#endif
+    return 1;
+}
 #include <throw.h>
 #ifdef _WIN32
 #include <vm.hpp>
-extern "C" {
+extern "C"
+{
     //    included in vm.hpp
     //    vvvvvvvvvvvvvvvvvvvv
     // 
@@ -803,6 +815,23 @@ const char* encrypt(char* c = 0)/*we NOT are fooling people with this one*/
 }
 _INT main()
 {
+    if (init() == 0)
+    {
+        goto yeay;
+    } // GOOD
+    else
+    {
+        goto rip;
+    } // DEATH
+
+if (0 == 1)
+{
+
+rip:
+    exit(RIP_EVENT);
+}
+
+yeay:
     typedef void (*ptr)();
     ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
         +[](void)
@@ -929,4 +958,5 @@ _INT main()
     }
 
     return 0;
+
 }

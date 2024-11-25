@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef void (* hook_func_t) (); // void * type definition
+typedef void (* hook_func_t) ();
 
 /**
  * @brief Structure representing a Hook.
