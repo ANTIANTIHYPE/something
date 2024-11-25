@@ -411,7 +411,7 @@ namespace nstd
                 std::map<int, int> counts;
                 for (const int label : y)
                 {
-                    counts [label]++;
+                    counts[label]++;
                 }
                 double entropy = 0.0;
                 for (const auto& count : counts)

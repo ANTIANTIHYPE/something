@@ -33,10 +33,7 @@ namespace nstd
          */
         genius_ptr(const genius_ptr& other) noexcept : ptr(other.ptr), shared_count(other.shared_count.load()), weak_count(other.weak_count.load())
         {
-            if (ptr)
-            {
-                shared_count.fetch_add(1);
-            }
+            if (ptr) shared_count.fetch_add(1);
         }
 
         /**
@@ -54,10 +51,7 @@ namespace nstd
         /**
          * @brief Destructor that releases the managed object if this is the last owner.
          */
-        ~genius_ptr() noexcept
-        {
-            release();
-        }
+        ~genius_ptr() noexcept { release(); }
 
         /**
          * @brief Copy assignment operator that assigns ownership from another genius_ptr.
@@ -207,7 +201,7 @@ namespace nstd
 
         private:
             T* ptr;                                   // Pointer to the managed object.
-            std::atomic<size_t>* shared_count;        // Pointer to the shared count.
+            std::atomic<std::size_t>* shared_count;        // Pointer to the shared count.
         };
 
         /**
@@ -222,8 +216,8 @@ namespace nstd
 
     private:
         T* ptr;                           // Pointer to the managed object.
-        std::atomic<size_t> shared_count; // Atomic count of shared owners.
-        std::atomic<size_t> weak_count;   // Atomic count of weak owners.
+        std::atomic<std::size_t> shared_count; // Atomic count of shared owners.
+        std::atomic<std::size_t> weak_count;   // Atomic count of weak owners.
 
         /**
          * @brief Releases the managed object and decrements the reference counts.
