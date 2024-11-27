@@ -13,220 +13,217 @@
 
 namespace nstd
 {
-    /**
-     * @brief Abstract base class for coroutines.
-     */
-    class CoroutineBase
-    {
-    public:
-        virtual ~CoroutineBase() = default;
+/**
+* @brief Abstract base class for coroutines.
+*/
+class CoroutineBase
+{
+public:
+    virtual ~CoroutineBase() = default;
 
-        /**
-         * @brief Resumes the coroutine execution.
-         * 
-         * @return true if the coroutine was resumed successfully, false if it has finished.
-         */
-        virtual bool resume() = 0;
-    };
+    /**
+     * @brief Resumes the coroutine execution.
+     * 
+     * @return true if the coroutine was resumed successfully, false if it has finished.
+     */
+    virtual bool resume() = 0;
+};
 
 #if __cplusplus <= 201703L
 
+/**
+ * @brief Coroutine class
+ */
+class coroutine : public CoroutineBase
+{
+public:
     /**
-     * @brief Coroutine implementation for C++98 to C++17.
+     * @brief Constructs a coroutine with a given function.
+     * 
+     * @param func The function to be executed by the coroutine.
      */
-    class coroutine : public CoroutineBase
+    coroutine(std::function<void()> func)
+        : func_(func), finished_(false) {}
+
+    /**
+     * @brief Resumes the coroutine execution.
+     * 
+     * @return true if the coroutine was resumed successfully, false if it has finished.
+     * 
+     * @throws CoroutineException if an error occurs during execution.
+     */
+    inline bool resume() override
     {
-    public:
-        /**
-         * @brief Constructs a coroutine with a given function.
-         * 
-         * @param func The function to be executed by the coroutine.
-         */
-        coroutine(std::function<void()> func)
-            : func_(func), finished_(false) {}
-
-        /**
-         * @brief Resumes the coroutine execution.
-         * 
-         * @return true if the coroutine was resumed successfully, false if it has finished.
-         * 
-         * @throws CoroutineException if an error occurs during execution.
-         */
-        bool resume() override
+        if (finished_) return false;
+        try { func_(); }
+        catch (...)
         {
-            if (finished_) return false;
-            try
-            {
-                func_();
-            }
-            catch (...)
-            {
-                std::cerr << "Error in coroutine" << std::endl;
-                finished_ = true;
-                throw CoroutineException();
-            }
+            std::cerr << "Error in coroutine" << std::endl;
             finished_ = true;
-            return true;
+            throw CoroutineException();
         }
+        finished_ = true;
+        return true;
+    }
 
-    private:
-        std::function<void()> func_; // The function to be executed by the coroutine.
-        bool finished_;              // Indicates whether the coroutine has finished execution.
-    };
+private:
+    std::function<void()> func_; // The function to be executed by the coroutine.
+    bool finished_;              // Indicates whether the coroutine has finished execution.
+};
 
 #else // ^^^ C++98 to C++17 ^^^ VVV C++20 VVV
 
+/**
+ * @brief Coroutine structure
+ */
+struct coroutine
+{
     /**
-     * @brief Coroutine implementation for C++20 and later.
+     * @brief Constructs a coroutine with a given function.
      */
-    struct coroutine
+    struct promise_type
     {
-        struct promise_type
-        {
-            int current_value;             // The current value yielded by the coroutine.
-            int return_value_;             // The value returned from the coroutine upon completion.
-            std::exception_ptr exception_; // Holds a pointer to any unhandled exception that may occur during the execution of the coroutine.
-
-            /**
-             * @brief Provides the initial suspend behavior of the coroutine.
-             * 
-             * @return A suspend operation.
-             */
-            std::suspend_always initial_suspend() { return std::suspend_always(); }
-
-            /**
-             * @brief Provides the final suspend behavior of the coroutine.
-             * 
-             * @return A suspend operation.
-             */
-            std::suspend_always final_suspend() noexcept { return std::suspend_always(); }
-
-            /**
-             * @brief Retrieves the coroutine object.
-             * 
-             * @return The coroutine object.
-             */
-            coroutine get_return_object()
-            {
-                return coroutine{ std::coroutine_handle<promise_type>::from_promise(*this) };
-            }
-
-            /**
-             * @brief Yields a value from the coroutine.
-             * 
-             * @param value The value to yield.
-             * 
-             * @return A suspend operation.
-             */
-            std::suspend_always yield_value(int value)
-            {
-                current_value = value;
-                return {};
-            }
-
-            /**
-             * @brief Returns a value from the coroutine.
-             * 
-             * @param value The value to return.
-             * 
-             * @return A suspend operation.
-             */
-            std::suspend_always return_value(int value)
-            {
-                return_value_ = value;
-                return {};
-            }
-
-            /**
-             * @brief Handles any unhandled exceptions.
-             */
-            void unhandled_exception()
-            {
-                exception_ = std::current_exception();
-            }
-        };
-
-        using handle_type = std::coroutine_handle<promise_type>;
-        handle_type coro; // The coroutine handle that manages the execution of the coroutine.
+        int current_value;             // The current value yielded by the coroutine.
+        int return_value_;             // The value returned from the coroutine upon completion.
+        std::exception_ptr exception_; // Holds a pointer to any unhandled exception that may occur during the execution of the coroutine.
 
         /**
-         * @brief Constructs a coroutine with a given handle.
+         * @brief Provides the initial suspend behavior of the coroutine.
          * 
-         * @param h The coroutine handle.
+         * @return A suspend operation.
          */
-        coroutine(handle_type h) : coro(h) {}
-        
+        inline std::suspend_always initial_suspend() { return std::suspend_always(); }
+
         /**
-         * @brief Destroys the coroutine.
+         * @brief Provides the final suspend behavior of the coroutine.
+         * 
+         * @return A suspend operation.
          */
-        ~coroutine()
+        inline std::suspend_always final_suspend() noexcept { return std::suspend_always(); }
+
+        /**
+         * @brief Retrieves the coroutine object.
+         * 
+         * @return The coroutine object.
+         */
+        inline coroutine get_return_object() noexcept
         {
-            if (coro)
-            {
-                coro.destroy();
-            }
+            return coroutine{ std::coroutine_handle<promise_type>::from_promise(*this) };
         }
 
         /**
-         * @brief Resumes the coroutine execution.
+         * @brief Yields a value from the coroutine.
          * 
-         * @return true if the coroutine was resumed successfully, false if it has finished.
+         * @param value The value to yield.
          * 
-         * @throws std::exception if an unhandled exception occurs during execution.
+         * @return A suspend operation.
          */
-        bool resume()
+        inline std::suspend_always yield_value(int value)
         {
-            if (coro)
-            {
-                coro.resume();
-                if (coro.promise().exception_)
-                {
-                    std::rethrow_exception(coro.promise().exception_);
-                }
-                return !coro.done();
-            }
-            return false;
+            current_value = value;
+            return {};
         }
 
         /**
-         * @brief Retrieves the current value yielded by the coroutine.
+         * @brief Returns a value from the coroutine.
          * 
-         * @return The current value.
+         * @param value The value to return.
+         * 
+         * @return A suspend operation.
          */
-        int current_value()
+        inline std::suspend_always return_value(int value)
         {
-            return coro.promise().current_value;
+            return_value_ = value;
+            return {};
         }
 
         /**
-         * @brief Retrieves the return value from the coroutine.
-         * 
-         * @return The return value.
+         * @brief Handles any unhandled exceptions.
          */
-        int return_value()
+        inline void unhandled_exception()
         {
-            return coro.promise().return_value_;
+            exception_ = std::current_exception();
         }
     };
+
+    using handle_type = std::coroutine_handle<promise_type>;
+    handle_type coro; // The coroutine handle that manages the execution of the coroutine.
+
+    /**
+     * @brief Constructs a coroutine with a given handle.
+     * 
+     * @param h The coroutine handle.
+     */
+    coroutine(handle_type h) : coro(h) {}
+        
+    /**
+     * @brief Destroys the coroutine.
+     */
+    ~coroutine()
+    {
+        if (coro) coro.destroy();
+    }
+
+    /**
+     * @brief Resumes the coroutine execution.
+     * 
+     * @return true if the coroutine was resumed successfully, false if it has finished.
+     * 
+     * @throws std::exception if an unhandled exception occurs during execution.
+     */
+    inline bool resume() const
+    {
+        if (coro)
+        {
+            coro.resume();
+            if (coro.promise().exception_)
+            {
+                std::rethrow_exception(coro.promise().exception_);
+            }
+            return !coro.done();
+        }
+        return false;
+    }
+
+    /**
+     * @brief Retrieves the current value yielded by the coroutine.
+     * 
+     * @return The current value.
+     */
+    inline int current_value()
+    {
+        return coro.promise().current_value;
+    }
+
+    /**
+     * @brief Retrieves the return value from the coroutine.
+     * 
+     * @return The return value.
+     */
+    const inline int return_value() const
+    {
+        return coro.promise().return_value_;
+    }
+};
 
 #endif // ^^^ C++20 ^^^
 
+/**
+ * @brief Exception class for coroutine errors.
+ */
+class CoroutineException : public std::exception
+{
+public:
     /**
-     * @brief Exception class for coroutine errors.
+     * @brief Returns a description of the exception.
+     * 
+     * @return A C-style string describing the error.
      */
-    class CoroutineException : public std::exception
+    const char* what() const noexcept override
     {
-    public:
-        /**
-         * @brief Returns a description of the exception.
-         * 
-         * @return A C-style string describing the error.
-         */
-        const char* what() const noexcept override
-        {
-            return "Coroutine exception occurred";
-        }
-    };
+        return "Coroutine exception occurred";
+    }
+};
 
 } // namespace nstd
 

@@ -8,527 +8,539 @@
 
 namespace nstd
 {
+
+/**
+ * @brief Machine Learning
+ */
+namespace ML
+{
+
+/**
+ * @brief A class for performing Linear Regression with L2 Regularization.
+ */
+class LinearRegression
+{
+public:
     /**
-     * @brief Machine Learning
+     * @brief Constructs a LinearRegression object.
+     * 
+     * @param lambda The L2 regularization parameter.
      */
-    namespace ML
+    LinearRegression(double lambda = 0.0) : slope(0), intercept(0), lambda(lambda) {}
+
+    /**
+     * @brief Fits the linear regression model to the provided data.
+     * 
+     * @param x A vector of input features.
+     * @param y A vector of target values.
+     */
+    inline void fit(const std::vector<double>& x, const std::vector<double>& y)
     {
-        /**
-         * @brief A class for performing Linear Regression with L2 Regularization.
-         */
-        class LinearRegression
+        int n = x.size();
+        if (n == 0) return;
+
+        double x_mean = std::accumulate(x.begin(), x.end(), 0.0) / n;
+        double y_mean = std::accumulate(y.begin(), y.end(), 0.0) / n;
+
+        double numerator = 0, denominator = 0;
+        for (int i = 0; i < n; ++i)
         {
-        public:
-            /**
-             * @brief Constructs a LinearRegression object.
-             * 
-             * @param lambda The L2 regularization parameter.
-             */
-            LinearRegression(double lambda = 0.0) : slope(0), intercept(0), lambda(lambda) {}
+            numerator += (x[i] - x_mean) * (y[i] - y_mean);
+            denominator += (x[i] - x_mean) * (x[i] - x_mean);
+        }
 
-            /**
-             * @brief Fits the linear regression model to the provided data.
-             * 
-             * @param x A vector of input features.
-             * @param y A vector of target values.
-             */
-            void fit(const std::vector<double>& x, const std::vector<double>& y)
-            {
-                int n = x.size();
-                if (n == 0) return;
+        slope = numerator / (denominator + lambda);
+        intercept = y_mean - slope * x_mean;
+    }
 
-                double x_mean = std::accumulate(x.begin(), x.end(), 0.0) / n;
-                double y_mean = std::accumulate(y.begin(), y.end(), 0.0) / n;
+    /**
+     * @brief Predicts the target value for a given input feature.
+     * 
+     * @param x The input feature.
+     * 
+     * @return The predicted target value.
+     */
+    inline double predict(double x) const
+    {
+        return slope * x + intercept;
+    }
 
-                double numerator = 0, denominator = 0;
-                for (int i = 0; i < n; ++i)
-                {
-                    numerator += (x[i] - x_mean) * (y[i] - y_mean);
-                    denominator += (x[i] - x_mean) * (x[i] - x_mean);
-                }
+private:
+    double slope;     // Slope of the regression line.
+    double intercept; // Intercept of the regression line.
+    double lambda;    // L2 regularization parameter.
+}; // class LinearRegression
 
-                slope = numerator / (denominator + lambda);
-                intercept = y_mean - slope * x_mean;
-            }
+/**
+ * @brief A class for performing Logistic Regression with support for multi-class classification.
+ */
+class LogisticRegression
+{
+public:
+    /**
+     * @brief Constructs a LogisticRegression object.
+     * 
+     * @param num_classes The number of classes for classification.
+     */
+    LogisticRegression(int num_classes, int input_size) : num_classes(num_classes), input_size(input_size)
+    {
+        weights.resize(num_classes, std::vector<double>(input_size));
+        biases.resize(num_classes);
+        initializeWeights();
+    }
 
-            /**
-             * @brief Predicts the target value for a given input feature.
-             * 
-             * @param x The input feature.
-             * 
-             * @return The predicted target value.
-             */
-            double predict(double x) const
-            {
-                return slope * x + intercept;
-            }
-
-        private:
-            double slope;     // Slope of the regression line.
-            double intercept; // Intercept of the regression line.
-            double lambda;    // L2 regularization parameter.
-        }; // class LinearRegression
-
-        /**
-         * @brief A class for performing Logistic Regression with support for multi-class classification.
-         */
-        class LogisticRegression
+    /**
+     * @brief Fits the logistic regression model to the provided data.
+     * 
+     * @param x A 2D vector of input features.
+     * @param y A vector of target class labels.
+     * @param learning_rate The learning rate for gradient descent.
+     * @param epochs The number of iterations for training.
+     */
+    inline void fit(const std::vector<std::vector<double>>& x,
+                    const std::vector<int>& y,
+                    double learning_rate = 0.01,
+                    int epochs = 10000)
+    {
+        for (int epoch = 0; epoch < epochs; ++epoch)
         {
-        public:
-            /**
-             * @brief Constructs a LogisticRegression object.
-             * 
-             * @param num_classes The number of classes for classification.
-             */
-            LogisticRegression(int num_classes, int input_size) : num_classes(num_classes), input_size(input_size)
+            for (std::size_t i = 0; i < x.size(); ++i)
             {
-                weights.resize(num_classes, std::vector<double>(input_size));
-                biases.resize(num_classes);
-                initializeWeights();
-            }
+                std::vector<double> scores = computeScores(x[i]);
+                std::vector<double> probs = softmax(scores);
 
-            /**
-             * @brief Fits the logistic regression model to the provided data.
-             * 
-             * @param x A 2D vector of input features.
-             * @param y A vector of target class labels.
-             * @param learning_rate The learning rate for gradient descent.
-             * @param epochs The number of iterations for training.
-             */
-            void fit(const std::vector<std::vector<double>>& x,
-                     const std::vector<int>& y,
-                     double learning_rate = 0.01,
-                     int epochs = 1000)
-            {
-                for (int epoch = 0; epoch < epochs; ++epoch)
+                // Update weights and biases
+                for (int j = 0; j < num_classes; ++j)
                 {
-                    for (std::size_t i = 0; i < x.size(); ++i)
+                    double error = (j == y[i]) ? 1.0 : 0.0;
+                    for (std::size_t k = 0; k < static_cast<std::size_t>(input_size); ++k)
                     {
-                        std::vector<double> scores = computeScores(x[i]);
-                        std::vector<double> probs = softmax(scores);
-
-                        // Update weights and biases
-                        for (int j = 0; j < num_classes; ++j)
-                        {
-                            double error = (j == y[i]) ? 1.0 : 0.0;
-                            for (std::size_t k = 0; k < static_cast<std::size_t>(input_size); ++k)
-                            {
-                                weights[j][k] += learning_rate * (error - probs[j]) * x[i][k];
-                            }
-                            biases[j] += learning_rate * (error - probs[j]);
-                        }
+                        weights[j][k] += learning_rate * (error - probs[j]) * x[i][k];
                     }
+
+                    biases[j] += learning_rate * (error - probs[j]);
                 }
             }
+        }
+    }
 
-            /**
-             * @brief Predicts the class probabilities for a given input sample.
-             * 
-             * @param sample A vector representing the input features.
-             * 
-             * @return A vector of predicted probabilities for each class.
-             */
-            std::vector<double> predict(const std::vector<double>& sample) const
-            {
-                std::vector<double> scores = computeScores(sample);
-                return softmax(scores);
-            }
+    /**
+     * @brief Predicts the class probabilities for a given input sample.
+     * 
+     * @param sample A vector representing the input features.
+     * 
+     * @return A vector of predicted probabilities for each class.
+     */
+    inline std::vector<double> predict(const std::vector<double>& sample) const
+    {
+        std::vector<double> scores = computeScores(sample);
+        return softmax(scores);
+    }
 
-            /**
-             * @brief Predicts the class label for a given input sample.
-             * 
-             * @param sample A vector representing the input features.
-             * 
-             * @return The predicted class label.
-             */
-            int predictClass(const std::vector<double>& sample) const
-            {
-                std::vector<double> probs = predict(sample);
-                return std::ranges::distance(probs.begin(), std::ranges::max_element(probs));
-            }
+    /**
+     * @brief Predicts the class label for a given input sample.
+     * 
+     * @param sample A vector representing the input features.
+     * 
+     * @return The predicted class label.
+     */
+    inline int predictClass(const std::vector<double>& sample) const
+    {
+        std::vector<double> probs = predict(sample);
+        return std::ranges::distance(probs.begin(), std::ranges::max_element(probs));
+    }
 
-        private:
-            int num_classes;                          // Number of classes for classification.
-            int input_size;                           // Number of input features.
-            std::vector<std::vector<double>> weights; // Weights for each class.
-            std::vector<double> biases;               // Biases for each class.
+private:
+    int num_classes;                          // Number of classes for classification.
+    int input_size;                           // Number of input features.
+    std::vector<std::vector<double>> weights; // Weights for each class.
+    std::vector<double> biases;               // Biases for each class.
 
-            /**
-             * @brief Computes the raw scores for each class given an input sample.
-             * 
-             * @param sample A vector representing the input features.
-             * 
-             * @return A vector of raw scores for each class.
-             */
-            std::vector<double> computeScores(const std::vector<double>& sample) const
-            {
-                std::vector<double> scores(num_classes, 0.0);
-                for (int i = 0; i < num_classes; ++i)
-                {
-                    for (std::size_t j = 0; j < static_cast<std::size_t>(input_size); ++j)
-                    {
-                        scores[i] += weights[i][j] * sample[j];
-                    }
-                    scores[i] += biases[i];
-                }
-                return scores;
-            }
-
-            /**
-             * @brief Computes the softmax activation for multi-class classification.
-             * 
-             * @param scores A vector of raw scores for each class.
-             * 
-             * @return A vector of softmax probabilities.
-             */
-            std::vector<double> softmax(const std::vector<double>& scores) const
-            {
-                std::vector<double> exp_scores(scores.size());
-                double max_score = *std::ranges::max_element(scores);
-                double sum_exp = 0.0;
-
-                for (std::size_t i = 0; i < scores.size(); ++i)
-                {
-                    exp_scores[i] = std::exp(scores[i] - max_score);
-                    sum_exp += exp_scores[i];
-                }
-
-                for (std::size_t i = 0; i < exp_scores.size(); ++i)
-                {
-                    exp_scores[i] /= sum_exp;
-                }
-
-                return exp_scores;
-            }
-
-            /**
-             * @brief Initializes weights and biases randomly.
-             */
-            void initializeWeights()
-            {
-                std::random_device rd;
-                std::mt19937 gen(rd());
-                std::uniform_real_distribution<> dis(-0.01, 0.01);
-                for (std::vector<double>& w : weights)
-                {
-                    for (double& weight : w)
-                    {
-                        weight = dis(gen);
-                    }
-                }
-                for (double& bias : biases)
-                {
-                    bias = dis(gen);
-                }
-            }
-        }; // class LogisticRegression
-
-        /**
-         * @brief A struct representing a node in the decision tree.
-         */
-        struct TreeNode
+    /**
+     * @brief Computes the raw scores for each class given an input sample.
+     * 
+     * @param sample A vector representing the input features.
+     * 
+     * @return A vector of raw scores for each class.
+     */
+    inline std::vector<double> computeScores(const std::vector<double>& sample) const
+    {
+        std::vector<double> scores(num_classes, 0.0);
+        for (int i = 0; i < num_classes; ++i)
         {
-            double value;                    // Value of the node (used for leaf nodes).
-            int feature_index;               // Index of the feature used for splitting.
-            double threshold;                // Threshold value for the split.
-            std::shared_ptr<TreeNode> left;  // Pointer to the left child node.
-            std::shared_ptr<TreeNode> right; // Pointer to the right child node.
-            bool is_leaf;                    // Indicates if the node is a leaf.
+            for (std::size_t j = 0; j < static_cast<std::size_t>(input_size); ++j)
+            {
+                scores[i] += weights[i][j] * sample[j];
+            }
+            scores[i] += biases[i];
+        }
 
-            TreeNode() : value(0), feature_index(-1), threshold(0), left(nullptr), right(nullptr), is_leaf(true) {}
-        };
+        return scores;
+    }
 
-        /**
-         * @brief A class for performing Decision Tree classification.
-         */
-        class DecisionTree
+    /**
+     * @brief Computes the softmax activation for multi-class classification.
+     * 
+     * @param scores A vector of raw scores for each class.
+     * 
+     * @return A vector of softmax probabilities.
+     */
+    inline std::vector<double> softmax(const std::vector<double>& scores) const
+    {
+        std::vector<double> exp_scores(scores.size());
+        double max_score = *std::ranges::max_element(scores);
+        double sum_exp = 0.0;
+
+        for (std::size_t i = 0; i < scores.size(); ++i)
         {
-        public:
-            /**
-             * @brief Constructs a DecisionTree object.
-             * 
-             * @param max_depth The maximum depth of the tree.
-             */
-            DecisionTree(int max_depth = 5) : root(nullptr), max_depth(max_depth) {}
+            exp_scores[i] = std::exp(scores[i] - max_score);
+            sum_exp += exp_scores[i];
+        }
 
-            /**
-             * @brief Fits the decision tree model to the provided data.
-             * 
-             * @param x A 2D vector of input features.
-             * @param y A vector of target values.
-             */
-            void fit(const std::vector<std::vector<double>>& x, const std::vector<int>& y)
-            {
-                root = buildTree(x, y, 0);
-            }
-
-            /**
-             * @brief Predicts the class label for a given input sample.
-             * 
-             * @param sample A vector representing the input features.
-             * 
-             * @return The predicted class label.
-             */
-            int predict(const std::vector<double>& sample) const
-            {
-                return predict(sample, root);
-            }
-
-        private:
-            std::shared_ptr<TreeNode> root; // Pointer to the root node of the tree.
-            int max_depth;                  // Maximum depth of the tree.
-
-            /**
-             * @brief Builds the decision tree recursively.
-             * 
-             * @param x A 2D vector of input features.
-             * @param y A vector of target values.
-             * @param depth The current depth of the tree.
-             * 
-             * @return A shared pointer to the root node of the constructed subtree.
-             */
-            std::shared_ptr<TreeNode> buildTree(const std::vector<std::vector<double>>& x, const std::vector<int>& y, int depth)
-            {
-                if (x.empty() || depth >= max_depth)
-                {
-                    return createLeafNode(y);
-                }
-
-                int best_feature = -1;
-                double best_threshold = 0.0;
-                double best_gain = 0.0;
-                std::vector<std::vector<double>> best_left_x, best_right_x;
-                std::vector<int> best_left_y, best_right_y;
-
-                for (std::size_t feature_index = 0; feature_index < x[0].size(); ++feature_index)
-                {
-                    std::vector<double> thresholds;
-                    for (const auto& sample : x)
-                    {
-                        thresholds.push_back(sample[feature_index]);
-                    }
-                    std::sort(thresholds.begin(), thresholds.end());
-                    thresholds.erase(std::unique(thresholds.begin(), thresholds.end()), thresholds.end());
-
-                    for (const double threshold : thresholds)
-                    {
-                        std::vector<std::vector<double>> left_x, right_x;
-                        std::vector<int> left_y, right_y;
-
-                        for (std::size_t i = 0; i < x.size(); ++i)
-                        {
-                            if (x[i][feature_index] <= threshold)
-                            {
-                                left_x.push_back(x[i]);
-                                left_y.push_back(y[i]);
-                            }
-                            else
-                            {
-                                right_x.push_back(x[i]);
-                                right_y.push_back(y[i]);
-                            }
-                        }
-
-                        double gain = informationGain(y, left_y, right_y);
-                        if (gain > best_gain)
-                        {
-                            best_gain = gain;
-                            best_feature = feature_index;
-                            best_threshold = threshold;
-                            best_left_x = left_x;
-                            best_right_x = right_x;
-                            best_left_y = left_y;
-                            best_right_y = right_y;
-                        }
-                    }
-                }
-
-                if (best_gain == 0.0)
-                {
-                    return createLeafNode(y);
-                }
-
-                auto node = std::make_shared<TreeNode>();
-                node->feature_index = best_feature;
-                node->threshold = best_threshold;
-                node->left = buildTree(best_left_x, best_left_y, depth + 1);
-                node->right = buildTree(best_right_x, best_right_y, depth + 1);
-                node->is_leaf = false;
-
-                return node;
-            }
-
-            /**
-             * @brief Creates a leaf node with the most common class label.
-             * 
-             * @param y A vector of target values.
-             * 
-             * @return A shared pointer to the created leaf node.
-             */
-            std::shared_ptr<TreeNode> createLeafNode(const std::vector<int>& y)
-            {
-                auto node = std::make_shared<TreeNode>();
-                std::map<int, int> counts;
-                for (const int label : y)
-                {
-                    counts[label]++;
-                }
-                node->value = std::max_element(counts.begin(), counts.end(), [](const auto& a, const auto& b)
-                {
-                    return a.second < b.second;
-                })->first;
-                node->is_leaf = true;
-                return node;
-            }
-
-            /**
-             * @brief Computes the information gain from a split.
-             * 
-             * @param parent_y A vector of target values before the split.
-             * @param left_y A vector of target values for the left child.
-             * @param right_y A vector of target values for the right child.
-             * 
-             * @return The information gain from the split.
-             */
-            double informationGain(const std::vector<int>& parent_y, const std::vector<int>& left_y, const std::vector<int>& right_y)
-            {
-                double parent_entropy = entropy(parent_y);
-                double left_entropy = entropy(left_y);
-                double right_entropy = entropy(right_y);
-                double weighted_entropy = (left_y.size() * left_entropy + right_y.size() * right_entropy) / parent_y.size();
-                return parent_entropy - weighted_entropy;
-            }
-
-            /**
-             * @brief Computes the entropy of a set of labels.
-             * 
-             * @param y A vector of target values.
-             * 
-             * @return The entropy of the labels.
-             */
-            double entropy(const std::vector<int>& y)
-            {
-                std::map<int, int> counts;
-                for (const int label : y)
-                {
-                    counts[label]++;
-                }
-                double entropy = 0.0;
-                for (const auto& count : counts)
-                {
-                    double probability = static_cast<double>(count.second) / y.size();
-                    entropy -= probability * std::log2(probability);
-                }
-                return entropy;
-            }
-
-            /**
-             * @brief Predicts the class label for a given input sample using the decision tree.
-             * 
-             * @param sample A vector representing the input features.
-             * @param node A pointer to the current node in the tree.
-             * 
-             * @return The predicted class label.
-             */
-            int predict(const std::vector<double>& sample, const std::shared_ptr<TreeNode>& node) const
-            {
-                if (node->is_leaf)
-                {
-                    return static_cast<int>(node->value);
-                }
-                if (sample[node->feature_index] <= node->threshold)
-                {
-                    return predict(sample, node->left);
-                }
-                else
-                {
-                    return predict(sample, node->right);
-                }
-            }
-        }; // class DecisionTree
-
-        /**
-         * @brief A class for performing Random Forest classification.
-         */
-        class RandomForest
+        for (std::size_t i = 0; i < exp_scores.size(); ++i)
         {
-        public:
-            /**
-             * @brief Constructs a RandomForest object.
-             * 
-             * @param n_trees The number of trees in the forest.
-             * @param max_depth The maximum depth of each tree.
-             */
-            RandomForest(int n_trees, int max_depth = 5) : n_trees(n_trees), max_depth(max_depth) {}
+            exp_scores[i] /= sum_exp;
+        }
 
-            /**
-             * @brief Fits the random forest model to the provided data.
-             * 
-             * @param x A 2D vector of input features.
-             * @param y A vector of target values.
-             */
-            void fit(const std::vector<std::vector<double>>& x, const std::vector<int>& y)
+        return exp_scores;
+    }
+
+    /**
+     * @brief Initializes weights and biases randomly.
+     */
+    void initializeWeights()
+    {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<> dis(-0.01, 0.01);
+        for (std::vector<double>& w : weights)
+        {
+            for (double& weight : w)
             {
-                for (int i = 0; i < n_trees; ++i)
-                {
-                    DecisionTree tree(max_depth);
-                    std::vector<std::vector<double>> sample_x;
-                    std::vector<int> sample_y;
-                    bootstrapSample(x, y, sample_x, sample_y);
-                    tree.fit(sample_x, sample_y);
-                    trees.push_back(tree);
-                }
+                weight = dis(gen);
+            }
+        }
+        for (double& bias : biases)
+        {
+            bias = dis(gen);
+        }
+    }
+}; // class LogisticRegression
+
+/**
+ * @brief A struct representing a node in the decision tree.
+ */
+struct TreeNode
+{
+    double value;                    // Value of the node (used for leaf nodes).
+    int feature_index;               // Index of the feature used for splitting.
+    double threshold;                // Threshold value for the split.
+    std::shared_ptr<TreeNode> left;  // Pointer to the left child node.
+    std::shared_ptr<TreeNode> right; // Pointer to the right child node.
+    bool is_leaf;                    // Indicates if the node is a leaf.
+
+    TreeNode() : value(0), feature_index(-1), threshold(0), left(nullptr), right(nullptr), is_leaf(true) {}
+};
+
+/**
+ * @brief A class for performing Decision Tree classification.
+ */
+class DecisionTree
+{
+public:
+    /**
+     * @brief Constructs a DecisionTree object.
+     * 
+     * @param max_depth The maximum depth of the tree.
+     */
+    DecisionTree(int max_depth = 5) : root(nullptr), max_depth(max_depth) {}
+
+    /**
+     * @brief Fits the decision tree model to the provided data.
+     * 
+     * @param x A 2D vector of input features.
+     * @param y A vector of target values.
+     */
+    inline void fit(const std::vector<std::vector<double>>& x, const std::vector<int>& y)
+    {
+        root = buildTree(x, y, 0);
+    }
+
+    /**
+     * @brief Predicts the class label for a given input sample.
+     * 
+     * @param sample A vector representing the input features.
+     * 
+     * @return The predicted class label.
+     */
+    inline int predict(const std::vector<double>& sample) const
+    {
+        return predict(sample, root);
+    }
+
+private:
+    std::shared_ptr<TreeNode> root; // Pointer to the root node of the tree.
+    int max_depth;                  // Maximum depth of the tree.
+
+    /**
+     * @brief Builds the decision tree recursively.
+     * 
+     * @param x A 2D vector of input features.
+     * @param y A vector of target values.
+     * @param depth The current depth of the tree.
+     * 
+     * @return A shared pointer to the root node of the constructed subtree.
+     */
+    inline std::shared_ptr<TreeNode> buildTree(const std::vector<std::vector<double>>& x, const std::vector<int>& y, int depth)
+    {
+        if (x.empty() || depth >= max_depth)
+        {
+            return createLeafNode(y);
+        }
+
+        int best_feature = -1;
+        double best_threshold = 0.0;
+        double best_gain = 0.0;
+        std::vector<std::vector<double>> best_left_x, best_right_x;
+        std::vector<int> best_left_y, best_right_y;
+
+        for (std::size_t feature_index = 0; feature_index < x[0].size(); ++feature_index)
+        {
+            std::vector<double> thresholds;
+            for (const auto& sample : x)
+            {
+                thresholds.push_back(sample[feature_index]);
             }
 
-            /**
-             * @brief Predicts the class label for a given input sample.
-             * 
-             * @param sample A vector representing the input features.
-             * 
-             * @return The predicted class label.
-             */
-            int predict(const std::vector<double>& sample) const
+            std::sort(thresholds.begin(), thresholds.end());
+            thresholds.erase(std::unique(thresholds.begin(), thresholds.end()), thresholds.end());
+
+            for (const double threshold : thresholds)
             {
-                std::map<int, int> votes;
-                for (const DecisionTree& tree : trees)
-                {
-                    int prediction = tree.predict(sample);
-                    votes[prediction]++;
-                }
+                std::vector<std::vector<double>> left_x, right_x;
+                std::vector<int> left_y, right_y;
 
-                return std::ranges::max_element(votes.begin(), votes.end(), [](const auto& a, const auto& b)
-                {
-                    return a.second < b.second;
-                })->first;
-            }
-
-        private:
-            int n_trees;                          // Number of trees in the forest.
-            int max_depth;                        // Maximum depth of each tree.
-            std::vector<DecisionTree> trees;      // Vector of decision trees.
-
-            /**
-             * @brief Creates a bootstrap sample from the provided data.
-             * 
-             * @param x A 2D vector of input features.
-             * @param y A vector of target values.
-             * @param sample_x A reference to a vector to store the sampled input features.
-             * @param sample_y A reference to a vector to store the sampled target values.
-             */
-            void bootstrapSample(const std::vector<std::vector<double>>& x, const std::vector<int>& y,
-                                 std::vector<std::vector<double>>& sample_x, std::vector<int>& sample_y)
-            {
-                std::random_device rd;
-                std::mt19937 gen(rd());
-                std::uniform_int_distribution<> dis(0, x.size() - 1);
                 for (std::size_t i = 0; i < x.size(); ++i)
                 {
-                    int index = dis(gen);
-                    sample_x.push_back(x[index]);
-                    sample_y.push_back(y[index]);
+                    if (x[i][feature_index] <= threshold)
+                    {
+                        left_x.push_back(x[i]);
+                        left_y.push_back(y[i]);
+                    }
+                    else
+                    {
+                        right_x.push_back(x[i]);
+                        right_y.push_back(y[i]);
+                    }
+                }
+
+                double gain = informationGain(y, left_y, right_y);
+                if (gain > best_gain)
+                {
+                    best_gain = gain;
+                    best_feature = feature_index;
+                    best_threshold = threshold;
+                    best_left_x = left_x;
+                    best_right_x = right_x;
+                    best_left_y = left_y;
+                    best_right_y = right_y;
                 }
             }
-        }; // class RandomForest
+        }
+
+        if (best_gain == 0.0)
+        {
+            return createLeafNode(y);
+        }
+
+        std::shared_ptr<TreeNode> node = std::make_shared<TreeNode>();
+        node->feature_index = best_feature;
+        node->threshold = best_threshold;
+        node->left = buildTree(best_left_x, best_left_y, depth + 1);
+        node->right = buildTree(best_right_x, best_right_y, depth + 1);
+        node->is_leaf = false;
+
+        return node;
+    }
+
+    /**
+     * @brief Creates a leaf node with the most common class label.
+     * 
+     * @param y A vector of target values.
+     * 
+     * @return A shared pointer to the created leaf node.
+     */
+    inline std::shared_ptr<TreeNode> createLeafNode(const std::vector<int>& y)
+    {
+        std::shared_ptr<nstd::ML::TreeNode> node = std::make_shared<TreeNode>();
+        std::map<int, int> counts;
+        for (const int label : y)
+        {
+             counts[label]++;
+        }
+
+        node->value = std::max_element(counts.begin(), counts.end(), [](const auto& a, const auto& b)
+        {
+            return a.second < b.second;
+        })->first;
+
+        node->is_leaf = true;
+
+        return node;
+    }
+
+    /**
+     * @brief Computes the information gain from a split.
+     * 
+     * @param parent_y A vector of target values before the split.
+     * @param left_y A vector of target values for the left child.
+     * @param right_y A vector of target values for the right child.
+     * 
+     * @return The information gain from the split.
+     */
+    inline double informationGain(const std::vector<int>& parent_y, const std::vector<int>& left_y, const std::vector<int>& right_y)
+    {
+        double parent_entropy = entropy(parent_y);
+        double left_entropy = entropy(left_y);
+        double right_entropy = entropy(right_y);
+        double weighted_entropy = (left_y.size() * left_entropy + right_y.size() * right_entropy) / parent_y.size();
+        return parent_entropy - weighted_entropy;
+    }
+
+    /**
+     * @brief Computes the entropy of a set of labels.
+     * 
+     * @param y A vector of target values.
+     * 
+     * @return The entropy of the labels.
+     */
+    inline double entropy(const std::vector<int>& y)
+    {
+        std::map<int, int> counts;
+        for (const int label : y)
+        {
+            counts[label]++;
+        }
+
+        double entropy = 0.0;
+        for (const auto& count : counts)
+        {
+            double probability = static_cast<double>(count.second) / y.size();
+            entropy -= probability * std::log2(probability);
+        }
+
+        return entropy;
+    }
+
+    /**
+     * @brief Predicts the class label for a given input sample using the decision tree.
+     * 
+     * @param sample A vector representing the input features.
+     * @param node A pointer to the current node in the tree.
+     * 
+     * @return The predicted class label.
+     */
+    inline int predict(const std::vector<double>& sample, const std::shared_ptr<TreeNode>& node) const
+    {
+        if (node->is_leaf)
+        {
+            return static_cast<int>(node->value);
+        }
+        if (sample[node->feature_index] <= node->threshold)
+        {
+            return predict(sample, node->left);
+        }
+        else
+        {
+            return predict(sample, node->right);
+        }
+    }
+}; // class DecisionTree
+
+/**
+ * @brief A class for performing Random Forest classification.
+ */
+class RandomForest
+{
+public:
+    /**
+     * @brief Constructs a RandomForest object.
+     * 
+     * @param n_trees The number of trees in the forest.
+     * @param max_depth The maximum depth of each tree.
+     */
+    RandomForest(int n_trees, int max_depth = 5) : n_trees(n_trees), max_depth(max_depth) {}
+
+    /**
+     * @brief Fits the random forest model to the provided data.
+     * 
+     * @param x A 2D vector of input features.
+     * @param y A vector of target values.
+     */
+    inline void fit(const std::vector<std::vector<double>>& x, const std::vector<int>& y)
+    {
+        for (int i = 0; i < n_trees; ++i)
+        {
+            DecisionTree tree(max_depth);
+            std::vector<std::vector<double>> sample_x;
+            std::vector<int> sample_y;
+            bootstrapSample(x, y, sample_x, sample_y);
+            tree.fit(sample_x, sample_y);
+            trees.push_back(tree);
+        }
+    }
+
+    /**
+     * @brief Predicts the class label for a given input sample.
+     * 
+     * @param sample A vector representing the input features.
+     * 
+     * @return The predicted class label.
+     */
+    inline int predict(const std::vector<double>& sample) const
+    {
+        std::map<int, int> votes;
+        for (const DecisionTree& tree : trees)
+        {
+            int prediction = tree.predict(sample);
+            votes[prediction]++;
+        }
+
+        return std::ranges::max_element(votes.begin(), votes.end(), [](const auto& a, const auto& b)
+        {
+            return a.second < b.second;
+        })->first;
+    }
+
+private:
+    int n_trees;                          // Number of trees in the forest.
+    int max_depth;                        // Maximum depth of each tree.
+    std::vector<DecisionTree> trees;      // Vector of decision trees.
+
+    /**
+     * @brief Creates a bootstrap sample from the provided data.
+     * 
+     * @param x A 2D vector of input features.
+     * @param y A vector of target values.
+     * @param sample_x A reference to a vector to store the sampled input features.
+     * @param sample_y A reference to a vector to store the sampled target values.
+     */
+    inline void bootstrapSample(const std::vector<std::vector<double>>& x, const std::vector<int>& y,
+                                std::vector<std::vector<double>>& sample_x, std::vector<int>& sample_y)
+    {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(0, x.size() - 1);
+        for (std::size_t i = 0; i < x.size(); ++i)
+        {
+            int index = dis(gen);
+            sample_x.push_back(x[index]);
+            sample_y.push_back(y[index]);
+        }
+    }
+}; // class RandomForest
+
+        // no need to format this
 
         // /**
         //  * @todo REWORK
@@ -776,5 +788,7 @@ namespace nstd
         //         }
         //     }
         // }; // class NeuralNetwork
-    } // namespace ML
+
+} // namespace ML
+
 } // namespace nstd
