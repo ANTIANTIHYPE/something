@@ -13,6 +13,7 @@
 
 namespace nstd
 {
+
 /**
 * @brief Abstract base class for coroutines.
 */
