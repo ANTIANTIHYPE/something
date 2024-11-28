@@ -2,7 +2,6 @@
 
 #include <random>
 #include <chrono>
-#include <iostream>
 
 namespace nstd
 {
