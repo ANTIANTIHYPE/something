@@ -182,7 +182,7 @@ __INLINE VOID HOOKAPI     list_hooks (HookManager *     manager)
     while ( current )
     {
         printf("Hook: original=%p, hook=%p, enabled=%d\n", 
-               (LPVOID)current->original, (LPVOID) current->hook, current->enabled);
+               (LPVOID) current->original, (LPVOID) current->hook, current->enabled);
         current = current->next;
     }
 }
@@ -194,7 +194,7 @@ __INLINE VOID HOOKAPI     list_hooks (HookManager *     manager)
  */
 __INLINE __NORETURN VOID HOOKAPI     execute_hook (Hook *     hook)
 {
-    if (hook && hook->enabled && hook->hook)
+    if ( hook && hook->enabled && hook->hook )
     {
         hook->hook();
     }

@@ -2,6 +2,9 @@
 **/compiled_hs/
 **/build/
 
+# will be rewritten and published whenever...never.
+C++/nstd/physics.hpp
+
 *.exe
 *.pdb
 *.dll
