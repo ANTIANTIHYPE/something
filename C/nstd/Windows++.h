@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <comutil.h>
+#include <comdef.h>
 #include <wbemidl.h>
 
 #ifdef __cplusplus
@@ -31,19 +32,52 @@ extern "C"
 #define IS_FEATURE_SUPPORTED (version)     ( GetVersion() >= version )
 
 typedef const char * CSTR;
-typedef void (* WMIObjectCallback) (IWbemClassObject * pclsObj, 
-                                    LPVOID             userData);
+typedef void (* WMIObjectCallback) ( IWbemClassObject * pclsObj, 
+                                     LPVOID             userData );
 
-__INLINE VOID WINAPI_INLINE     sendWQLQuery (CSTR                  query, 
-                                              WMIObjectCallback     callback, 
-                                              LPVOID                userData)
+__INLINE INT WINAPI_INLINE     CheckProtection ( LPVOID     addr )
+{
+    MEMORY_BASIC_INFORMATION mbi;
+    if (VirtualQuery(addr, &mbi, sizeof(mbi)))
+    {
+        switch (mbi.Protect)
+        {
+            case PAGE_READONLY:          return PROT_READ;
+            case PAGE_READWRITE:         return PROT_READ | PROT_WRITE;
+            case PAGE_EXECUTE_READ:      return PROT_EXEC | PROT_READ;
+            case PAGE_EXECUTE_READWRITE: return PROT_EXEC | PROT_READ | PROT_WRITE;
+            case PAGE_NOACCESS:          return PROT_NONE;
+            default:                     return -1; // Unknown protection
+        }
+    }
+    return -1;
+}
+
+__INLINE CSTR WINAPI_INLINE     GetLastErrorStr ( VOID )
+{
+    DWORD errcode = GetLastError();
+    LPSTR errmsg = NULL;
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 
+        NULL, 
+        errcode,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
+        (LPSTR) & errmsg, 
+        0, 
+        NULL);
+    return errmsg;
+}
+
+__INLINE VOID WINAPI_INLINE     sendWQLQuery ( CSTR                  query, 
+                                               WMIObjectCallback     callback, 
+                                               LPVOID                userData )
 {
     HRESULT hres;
 
     hres = CoInitializeEx(0, COINIT_MULTITHREADED);
     if ( FAILED(hres) )
     {
-        printf("Failed to initialize COM library. Error code 0x%X\n", hres);
+        printf("Failed to initialize COM library. Error code 0x%lX\n", hres);
         return;
     }
 
@@ -61,21 +95,21 @@ __INLINE VOID WINAPI_INLINE     sendWQLQuery (CSTR                  query,
 
     if ( FAILED(hres) )
     {
-        printf("Failed to initialize security. Error code 0x%X\n", hres);
+        printf("Failed to initialize security. Error code 0x%lX\n", hres);
         CoUninitialize();
         return;
     }
 
     IWbemLocator * pLoc = NULL;
     hres = CoCreateInstance(
-        CLSID_WbemLocator,
-        0,
+        & CLSID_WbemLocator,
+        NULL,
         CLSCTX_INPROC_SERVER,
-        IID_IWbemLocator, (LPVOID *)&pLoc);
+        & IID_IWbemLocator, (LPVOID *) & pLoc);
 
     if ( FAILED(hres) )
     {
-        printf("Failed to create IWbemLocator object. Error code 0x%X\n", hres);
+        printf("Failed to create IWbemLocator object. Error code 0x%lX\n", hres);
         CoUninitialize();
         return;
     }
@@ -94,14 +128,14 @@ __INLINE VOID WINAPI_INLINE     sendWQLQuery (CSTR                  query,
 
     if ( FAILED(hres) )
     {
-        printf("Could not connect. Error code 0x%X\n", hres);
-        pLoc->Release();
+        printf("Could not connect. Error code 0x%lX\n", hres);
+        if ( pLoc ) pLoc->Release();
         CoUninitialize();
         return;
     }
 
     hres = CoSetProxyBlanket(
-        pSvc,                        // Indicates the proxy to set
+        (IUnknown *) pSvc,                        // Indicates the proxy to set
         RPC_C_AUTHN_WINNT,           // RPC_C_AUTHN_xxx
         RPC_C_AUTHZ_NONE,            // RPC_C_AUTHZ_xxx
         NULL,                        // Server principal name 
@@ -113,9 +147,9 @@ __INLINE VOID WINAPI_INLINE     sendWQLQuery (CSTR                  query,
 
     if ( FAILED(hres) )
     {
-        printf("Could not set proxy blanket. Error code 0x%X\n", hres);
-        pSvc->Release();
-        pLoc->Release();
+        printf("Could not set proxy blanket. Error code 0x%lX\n", hres);
+        if ( pSvc ) pSvc->Release();
+        if ( pLoc ) pLoc->Release();
         CoUninitialize();
         return;
     }
@@ -130,9 +164,9 @@ __INLINE VOID WINAPI_INLINE     sendWQLQuery (CSTR                  query,
 
     if ( FAILED(hres) )
     {
-        printf("Query failed. Error code 0x%X\n", hres);
-        pSvc->Release();
-        pLoc->Release();
+        printf("Query failed. Error code 0x%lX\n", hres);
+        if ( pSvc ) pSvc->Release();
+        if ( pLoc ) pLoc->Release();
         CoUninitialize();
         return;
     }
@@ -142,7 +176,6 @@ __INLINE VOID WINAPI_INLINE     sendWQLQuery (CSTR                  query,
 
     while ( pEnumerator )
     {
-        HRESULT hr = pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn);
         if ( 0 == uReturn )
         {
             break;
@@ -156,22 +189,22 @@ __INLINE VOID WINAPI_INLINE     sendWQLQuery (CSTR                  query,
         pclsObj->Release();
     }
 
-    pEnumerator->Release();
-    pSvc->Release();
-    pLoc->Release();
+    if ( pEnumerator ) pEnumerator->Release();
+    if ( pSvc ) pSvc->Release();
+    if ( pLoc ) pLoc->Release();
     CoUninitialize();
 }
 
-__INLINE WINBOOL WINAPI_INLINE     mprotect (LPVOID     addr, 
-                                             SIZE_T     len, 
-                                             int        prot)
+__INLINE WINBOOL WINAPI_INLINE     mprotect ( LPVOID     addr, 
+                                              size_t     len, 
+                                              int        prot )
 {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     DWORD pageSize = si.dwPageSize;
 
     LPVOID alignedAddr = (LPVOID) ( (uintptr_t) addr & ~( pageSize - 1 ) );
-    size_t alignedLen = ( (uintptr_t) addr + len + pageSize - 1 ) & ~( pageSize - 1 ) - (uintptr_t) alignedAddr;
+    size_t alignedLen = ( (uintptr_t) addr + len + pageSize - 1 ) & ( ~( pageSize - 1 ) - (uintptr_t) alignedAddr );
 
     DWORD oldProtect;
     DWORD newProtect = 0;
@@ -195,32 +228,15 @@ __INLINE WINBOOL WINAPI_INLINE     mprotect (LPVOID     addr,
 
     if ( !VirtualProtect(alignedAddr, alignedLen, newProtect, &oldProtect) )
     {
-        PrintLastError("mprotect");
+        // placeholder
+        fprintf(stderr, "Whoops, failed to protect your ass with error id %lu (%s)", GetLastError(), GetLastErrorStr());
         return FALSE;
     }
 
     return TRUE;
 }
 
-__INLINE INT WINAPI_INLINE     CheckProtection (LPVOID     addr)
-{
-    MEMORY_BASIC_INFORMATION mbi;
-    if (VirtualQuery(addr, &mbi, sizeof(mbi)))
-    {
-        switch (mbi.Protect)
-        {
-            case PAGE_READONLY:          return PROT_READ;
-            case PAGE_READWRITE:         return PROT_READ | PROT_WRITE;
-            case PAGE_EXECUTE_READ:      return PROT_EXEC | PROT_READ;
-            case PAGE_EXECUTE_READWRITE: return PROT_EXEC | PROT_READ | PROT_WRITE;
-            case PAGE_NOACCESS:          return PROT_NONE;
-            default:                     return -1; // Unknown protection
-        }
-    }
-    return -1;
-}
-
-__INLINE VOID WINAPI_INLINE     PrintLastError (CSTR     funcName)
+__INLINE VOID WINAPI_INLINE     PrintLastError ( CSTR     funcName )
 {
     DWORD errcode = GetLastError();
     CSTR err = GetLastErrorStr();
@@ -228,23 +244,8 @@ __INLINE VOID WINAPI_INLINE     PrintLastError (CSTR     funcName)
     fprintf(stderr, "Error in %s: %lu - %S\n", funcName, errcode, (LPWSTR) err);
 }
 
-__INLINE CSTR WINAPI_INLINE     GetLastErrorStr ()
-{
-    static char errmsg[512];
-    DWORD errcode = GetLastError();
-    FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 
-        NULL, 
-        errcode,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
-        (LPWSTR) errmsg, 
-        sizeof(errmsg), 
-        NULL);
-    return errmsg;
-}
-
-__INLINE HANDLE WINAPI_INLINE     CreateNewThread (LPTHREAD_START_ROUTINE     threadFunc, 
-                                                   LPVOID                     param)
+__INLINE HANDLE WINAPI_INLINE     CreateNewThread ( LPTHREAD_START_ROUTINE     threadFunc, 
+                                                    LPVOID                     param )
 {
     HANDLE hThread = CreateThread(NULL, 0, threadFunc, param, 0, NULL);
     if ( hThread == NULL )
@@ -255,7 +256,7 @@ __INLINE HANDLE WINAPI_INLINE     CreateNewThread (LPTHREAD_START_ROUTINE     th
     return hThread;
 }
 
-__INLINE VOID WINAPI_INLINE     WaitForThread (HANDLE     hThread)
+__INLINE VOID WINAPI_INLINE     WaitForThread ( HANDLE     hThread )
 {
     if ( WaitForSingleObject(hThread, INFINITE) == WAIT_FAILED )
     {
@@ -265,7 +266,7 @@ __INLINE VOID WINAPI_INLINE     WaitForThread (HANDLE     hThread)
     CloseHandle(hThread);
 }
 
-__INLINE VOID WINAPI_INLINE     LockMutex (HANDLE     hMutex)
+__INLINE VOID WINAPI_INLINE     LockMutex ( HANDLE     hMutex )
 {
     DWORD waitResult = WaitForSingleObject(hMutex, INFINITE);
     if ( waitResult != WAIT_OBJECT_0 )
@@ -274,7 +275,7 @@ __INLINE VOID WINAPI_INLINE     LockMutex (HANDLE     hMutex)
     }
 }
 
-__INLINE VOID WINAPI_INLINE     UnlockMutex (HANDLE     hMutex)
+__INLINE VOID WINAPI_INLINE     UnlockMutex ( HANDLE     hMutex )
 {
     if ( !ReleaseMutex(hMutex) )
     {
@@ -282,7 +283,7 @@ __INLINE VOID WINAPI_INLINE     UnlockMutex (HANDLE     hMutex)
     }
 }
 
-__INLINE LPVOID WINAPI_INLINE     smalloc (size_t     size)
+__INLINE LPVOID WINAPI_INLINE     smalloc ( size_t     size )
 {
     LPVOID ptr = malloc(size);
     if ( ptr == NULL )
@@ -303,14 +304,14 @@ __INLINE VOID WINAPI_INLINE     sfree (LPVOID *     ptr)
     }
 }
 
-__INLINE INT WINAPI_INLINE     FileExists (CSTR     filename)
+__INLINE INT WINAPI_INLINE     FileExists ( CSTR     filename )
 {
     DWORD fileAttr = GetFileAttributesA(filename);
     return ( fileAttr != INVALID_FILE_ATTRIBUTES && !( fileAttr & FILE_ATTRIBUTE_DIRECTORY ) );
 }
 
-__INLINE WINBOOL WINAPI_INLINE     WriteToFile (CSTR     filename, 
-                                                CSTR     message)
+__INLINE WINBOOL WINAPI_INLINE     WriteToFile ( CSTR     filename, 
+                                                 CSTR     message )
 {
     HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if ( hFile == INVALID_HANDLE_VALUE )
@@ -324,7 +325,7 @@ __INLINE WINBOOL WINAPI_INLINE     WriteToFile (CSTR     filename,
     return result;
 }
 
-__INLINE CHAR * WINAPI_INLINE     ReadFromFile (CSTR     filename)
+__INLINE CHAR * WINAPI_INLINE     ReadFromFile ( CSTR     filename )
 {
     HANDLE hFile = CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if ( hFile == INVALID_HANDLE_VALUE )
@@ -343,7 +344,7 @@ __INLINE CHAR * WINAPI_INLINE     ReadFromFile (CSTR     filename)
     return buffer;
 }
 
-__INLINE VOID WINAPI_INLINE     MessageLoop ()
+__INLINE VOID WINAPI_INLINE     MessageLoop ( VOID )
 {
     MSG msg;
     while ( GetMessage(&msg, NULL, 0, 0) )
@@ -353,8 +354,8 @@ __INLINE VOID WINAPI_INLINE     MessageLoop ()
     }
 }
 
-__INLINE VOID WINAPI_INLINE     SetWindowTransparency (HWND     hWnd, 
-                                                       BYTE     alpha)
+__INLINE VOID WINAPI_INLINE     SetWindowTransparency ( HWND     hWnd, 
+                                                        BYTE     alpha )
 {
     LONG_PTR style = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
     if ( !( style & WS_EX_LAYERED ) )
@@ -367,22 +368,22 @@ __INLINE VOID WINAPI_INLINE     SetWindowTransparency (HWND     hWnd,
     }
 }
 
-__INLINE WINBOOL WINAPI_INLINE     RegisterHotkey (HWND     hWnd, 
-                                                   int      id, 
-                                                   UINT     fsModifiers, 
-                                                   UINT     vk)
+__INLINE WINBOOL WINAPI_INLINE     RegisterHotkey ( HWND     hWnd, 
+                                                    int      id, 
+                                                    UINT     fsModifiers, 
+                                                    UINT     vk )
 {
     if ( !RegisterHotKey(hWnd, id, fsModifiers, vk) )
     {
-        PrintLastError("RegisterHotkey");
+        printf("RegisterHotkey didn't work (%s)", GetLastErrorStr());
         return FALSE;
     }
 
     return TRUE;
 }
 
-__INLINE WINBOOL WINAPI_INLINE     UnregisterHotkey (HWND     hWnd, 
-                                                     int      id)
+__INLINE WINBOOL WINAPI_INLINE     UnregisterHotkey ( HWND     hWnd, 
+                                                      int      id )
 {
     if ( !UnregisterHotKey(hWnd, id) )
     {
@@ -393,24 +394,24 @@ __INLINE WINBOOL WINAPI_INLINE     UnregisterHotkey (HWND     hWnd,
     return TRUE;
 }
 
-__INLINE INT WINAPI_INLINE      GetWindowPosition (HWND     hWnd, 
-                                                   int *    x, 
-                                                   int *    y)
+__INLINE WINBOOL WINAPI_INLINE      GetWindowPosition ( HWND     hWnd, 
+                                                        int *    x, 
+                                                        int *    y )
 {
     RECT rect;
     if ( GetWindowRect(hWnd, &rect) )
     {
         * x = rect.left;
         * y = rect.top;
-        return * x, * y;
+        return TRUE;
     }
 
-    PrintLastError("GetWindowPosition");
+    return FALSE;
 }
 
-__INLINE WINBOOL WINAPI_INLINE      SetWindowPosition (HWND     hWnd, 
-                                                       int      x, 
-                                                       int      y)
+__INLINE WINBOOL WINAPI_INLINE      SetWindowPosition ( HWND     hWnd, 
+                                                        int      x, 
+                                                        int      y )
 {
     if ( SetWindowPos(hWnd, NULL, x, y, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE) )
     {
