@@ -216,7 +216,7 @@ __INLINE VOID HOOKAPI     list_hooks ( HookManager *     manager )
     while ( current )
     {
         printf("Hook: original=%p, hook=%p, enabled=%d, ref_count=%d\n",
-               (LPVOID)current->original, (LPVOID)current->hook, current->enabled, current->ref_count);
+               (LPVOID) current->original, (LPVOID) current->hook, current->enabled, current->ref_count);
         current = current->next;
     }
 }
