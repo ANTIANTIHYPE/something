@@ -50,7 +50,7 @@ HookManager;
 __INLINE HookManager * HOOKAPI     create_hook_manager ( VOID )
 {
     HookManager * manager = (HookManager *) malloc(sizeof(HookManager));
-    if (manager)
+    if ( manager )
     {
         manager->head = NULL;
     }
@@ -68,7 +68,7 @@ __INLINE HookManager * HOOKAPI     create_hook_manager ( VOID )
  */
 __INLINE VOID HOOKAPI     retain_hook ( Hook *     hook )
 {
-    if (hook) hook->ref_count++;
+    if ( hook ) hook->ref_count++;
 }
 
 /**
@@ -84,7 +84,7 @@ __INLINE Hook * HOOKAPI     create_hook ( HookManager *     manager,
                                           hook_func_t       original, 
                                           hook_func_t       hook )
 {
-    if (!original || !hook || !manager)
+    if ( !original || !hook || !manager )
     {
         fprintf(stderr, "Invalid parameters provided to create_hook.\n");
         return NULL;
@@ -98,7 +98,7 @@ __INLINE Hook * HOOKAPI     create_hook ( HookManager *     manager,
     new_hook->enabled = 0;
     new_hook->ref_count = 1;
     new_hook->original_bytes = (BYTE *) malloc(HOOK_SIZE);
-    if (!new_hook->original_bytes)
+    if ( !new_hook->original_bytes )
     {
         fprintf(stderr, "Failed to allocate memory for original bytes.\n");
         free(new_hook);
@@ -132,7 +132,7 @@ __INLINE Hook * HOOKAPI     create_hook ( HookManager *     manager,
  */
 __INLINE INT HOOKAPI     apply_hook ( Hook *     hook )
 {
-    if (!hook || !hook->original || !hook->hook)
+    if ( !hook || !hook->original || !hook->hook )
     {
         fprintf(stderr, "Invalid hook or its functions are NULL.\n");
         return -1;
@@ -150,14 +150,14 @@ __INLINE INT HOOKAPI     apply_hook ( Hook *     hook )
  */
 __INLINE INT HOOKAPI     restore_hook ( Hook *     hook )
 {
-    if (!hook || !hook->original || !hook->original_bytes)
+    if ( !hook || !hook->original || !hook->original_bytes )
     {
         fprintf(stderr, "Invalid hook or its original bytes are NULL.\n");
         return -1;
     }
 
     DWORD dwOldProtect;
-    if (!VirtualProtect(hook->original, HOOK_SIZE, PAGE_EXECUTE_READWRITE, &dwOldProtect))
+    if ( !VirtualProtect(hook->original, HOOK_SIZE, PAGE_EXECUTE_READWRITE, &dwOldProtect) )
     {
         fprintf(stderr, "Failed to change memory protection for restoring original function.\n");
         return -1;

@@ -21,7 +21,7 @@ void myWMIObjectCallback ( IWbemClassObject * pclsObj,
 
 int main()
 {
-    const char* query = "SELECT * FROM Win32_OperatingSystem";
+    CSTR query = "SELECT * FROM Win32_OperatingSystem";
     sendWQLQuery(query, myWMIObjectCallback, NULL);
 
     return 0;
