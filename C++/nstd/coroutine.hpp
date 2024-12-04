@@ -84,7 +84,7 @@ struct coroutine
      */
     struct promise_type
     {
-        int current_value;             // The current value yielded by the coroutine.
+        int m_curval;                  // The current value yielded by the coroutine.
         int return_value_;             // The value returned from the coroutine upon completion.
         std::exception_ptr exception_; // Holds a pointer to any unhandled exception that may occur during the execution of the coroutine.
 
@@ -121,7 +121,7 @@ struct coroutine
          */
         inline std::suspend_always yield_value(int value)
         {
-            current_value = value;
+            m_curval = value;
             return {};
         }
 
@@ -193,7 +193,7 @@ struct coroutine
      */
     inline int current_value()
     {
-        return coro.promise().current_value;
+        return coro.promise().m_curval;
     }
 
     /**

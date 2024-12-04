@@ -15,16 +15,16 @@ public:
     /**
      * @brief Constructs a random number generator and seeds it with the current time.
      */
-    random() : engine(std::chrono::system_clock::now().time_since_epoch().count()) {}
+    random() : m_engine(std::chrono::system_clock::now().time_since_epoch().count()) {}
 
     /**
      * @brief Seeds the random number generator.
      * 
      * @param s The seed value.
      */
-    void seed(std::uint32_t s)
+    inline void seed(std::uint32_t s) noexcept
     {
-        engine.seed(s);
+        m_engine.seed(s);
     }
 
     /**
@@ -38,10 +38,10 @@ public:
      * @return A random number in the range [min, max].
      */
     template <typename T>
-    T rand(T min, T max)
+    inline T rand(T min, T max) noexcept
     {
         std::uniform_real_distribution<T> distribution(min, max);
-        return distribution(engine);
+        return distribution(m_engine);
     }
 
     /**
@@ -49,7 +49,7 @@ public:
      * 
      * @return A random boolean value (true or false).
      */
-    bool randbool()
+    inline bool randbool() noexcept
     {
         return rand(0.0, 1.0) < 0.5;
     }
@@ -62,10 +62,10 @@ public:
      * 
      * @return A random number from the normal distribution.
      */
-    double randnorm(double mean, double stddev)
+    inline double randnorm(double mean, double stddev) noexcept
     {
         std::normal_distribution<double> distribution(mean, stddev);
-        return distribution(engine);
+        return distribution(m_engine);
     }
 
     /**
@@ -78,9 +78,9 @@ public:
      * @return A random number generated from the specified distribution.
      */
     template <typename T>
-    auto randdist(std::uniform_real_distribution<T>& distribution)
+    inline auto randdist(std::uniform_real_distribution<T>& distribution) noexcept
     {
-        return distribution(engine);
+        return distribution(m_engine);
     }
 
     /**
@@ -95,7 +95,7 @@ public:
      * @return A vector containing random numbers in the range [min, max].
      */
     template <typename T>
-    std::vector<T> randvec(int size, T min, T max)
+    inline std::vector<T> randvec(int size, T min, T max) noexcept
     {
         std::vector<T> vec(size);
         for (T& value : vec)
@@ -112,10 +112,10 @@ public:
      * 
      * @return A random number from the exponential distribution.
      */
-    double randexp(double lambda)
+    inline double randexp(double lambda) noexcept
     {
         std::exponential_distribution<double> distribution(lambda);
-        return distribution(engine);
+        return distribution(m_engine);
     }
 
     /**
@@ -125,14 +125,14 @@ public:
      * 
      * @return A random number from the Poisson distribution.
      */
-    int randpoisson(double mean)
+    inline int randpoisson(double mean) noexcept
     {
         std::poisson_distribution<int> distribution(mean);
-        return distribution(engine);
+        return distribution(m_engine);
     }
 
 private:
-    std::default_random_engine engine;
+    std::default_random_engine m_engine;
 
 }; // class random
 

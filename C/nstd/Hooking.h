@@ -4,39 +4,56 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h>
+
+#ifdef _WIN32
+
+# include <windows.h>
+
+#else // ^^^ defined(_WIN32) ^^^ / VVV !defined(_WIN32) VVV
+
+# include <sys/mman.h>
+# include <unistd.h>
+# include <stdint.h>
+
+#endif // ^^^ !defined(_WIN32) ^^^
 
 typedef void ( * hook_func_t ) ( );
 typedef const char * CSTR;
 
-#define __INLINE static inline
-#define __NORETURN __declspec ( noreturn )
-#define HOOKAPI __cdecl
+#ifdef _WIN32
+
+# define HOOKAPI __cdecl
+
+#else // ^^^ defined(_WIN32) ^^^ / VVV !defined(_WIN32) VVV
+
+# define HOOKAPI
+
+#endif // ^^^ !defined(_WIN32) ^^^
 
 #ifndef HOOK_SIZE
 
-#define HOOK_SIZE 16 // Size of a hook in bytes
+# define HOOK_SIZE 16 // Size of a hook in bytes
 
 #endif // !defined(HOOK_SIZE)
 
 /**
  * @brief Structure representing a Hook.
  */
-typedef struct Hook
+typedef struct _Hook
 {
-    hook_func_t   original;       // Pointer to the original function.
-    hook_func_t   hook;           // Pointer to the hook function.
-    BYTE *        original_bytes; // Bytes of the original function prologue.
-    int           enabled;        // Flag indicating if the hook is enabled (0 or 1).
-    int           ref_count;      // Reference count.
-    struct Hook * next;           // Pointer to the next Hook in the list.
+    hook_func_t    original;       // Pointer to the original function.
+    hook_func_t    hook;           // Pointer to the hook function.
+    BYTE *         original_bytes; // Bytes of the original function prologue.
+    int            enabled;        // Flag indicating if the hook is enabled.
+    int            ref_count;      // Reference count.
+    struct _Hook * next;           // Pointer to the next Hook in the list.
 }
 Hook;
 
 /**
  * @brief Structure representing a HookManager.
  */
-typedef struct HookManager
+typedef struct _HookManager
 {
     Hook * head; // Pointer to the head of the Hook list.
 }
@@ -47,7 +64,7 @@ HookManager;
  * 
  * @return A pointer to the newly created HookManager, or NULL if allocation fails.
  */
-__INLINE HookManager * HOOKAPI     create_hook_manager ( VOID )
+HookManager * HOOKAPI     create_hook_manager ( VOID )
 {
     HookManager * manager = (HookManager *) malloc(sizeof(HookManager));
     if ( manager )
@@ -66,7 +83,7 @@ __INLINE HookManager * HOOKAPI     create_hook_manager ( VOID )
  * 
  * @param hook Pointer to the Hook.
  */
-__INLINE VOID HOOKAPI     retain_hook ( Hook *     hook )
+VOID HOOKAPI     retain_hook ( Hook *     hook )
 {
     if ( hook ) hook->ref_count++;
 }
@@ -80,9 +97,9 @@ __INLINE VOID HOOKAPI     retain_hook ( Hook *     hook )
  * 
  * @return A pointer to the created Hook, or NULL if any parameter is NULL or allocation fails.
  */
-__INLINE Hook * HOOKAPI     create_hook ( HookManager *     manager, 
-                                          hook_func_t       original, 
-                                          hook_func_t       hook )
+Hook * HOOKAPI     create_hook ( HookManager *     manager, 
+                                 hook_func_t       original, 
+                                 hook_func_t       hook )
 {
     if ( !original || !hook || !manager )
     {
@@ -108,15 +125,33 @@ __INLINE Hook * HOOKAPI     create_hook ( HookManager *     manager,
     // store the original function's prologue
     memcpy(new_hook->original_bytes, original, HOOK_SIZE);
 
+#ifdef _WIN32
+
     DWORD dwOldProtect;
     VirtualProtect(original, HOOK_SIZE, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+
+#else // ^^^ defined(_WIN32) ^^^ / VVV !defined(_WIN32) VVV
+
+    size_t page_size = sysconf(_SC_PAGESIZE);
+    void * page_start = (void *) ( (uintptr_t) original & ~( page_size - 1 ) );
+    mprotect(page_start, page_size, PROT_READ | PROT_WRITE | PROT_EXEC);
+
+#endif // ^^^ !defined(_WIN32) ^^^
 
     // W trampoline sigma moment
     uintptr_t relative_address = (uintptr_t) hook - (uintptr_t) original - 5;
     * (BYTE *) original = 0xE9; // JMP opcode
     * (DWORD *) ( (BYTE *) original + 1 ) = (DWORD) relative_address;
 
+#ifdef _WIN32
+
     VirtualProtect(original, HOOK_SIZE, dwOldProtect, &dwOldProtect);
+
+#else // ^^^ defined(_WIN32) ^^^ / VVV !defined(_WIN32) VVV
+
+    mprotect(page_start, page_size, PROT_READ | PROT_EXEC);
+
+#endif // ^^^ !defined(_WIN32) ^^^
 
     new_hook->next = manager->head;
     manager->head = new_hook;
@@ -130,7 +165,7 @@ __INLINE Hook * HOOKAPI     create_hook ( HookManager *     manager,
  * 
  * @return 0 on success, -1 if the hook or its functions are NULL.
  */
-__INLINE INT HOOKAPI     apply_hook ( Hook *     hook )
+INT HOOKAPI     apply_hook ( Hook *     hook )
 {
     if ( !hook || !hook->original || !hook->hook )
     {
@@ -148,7 +183,7 @@ __INLINE INT HOOKAPI     apply_hook ( Hook *     hook )
  * 
  * @return 0 on success, -1 if the hook or its functions are NULL.
  */
-__INLINE INT HOOKAPI     restore_hook ( Hook *     hook )
+INT HOOKAPI     restore_hook ( Hook *     hook )
 {
     if ( !hook || !hook->original || !hook->original_bytes )
     {
@@ -156,14 +191,33 @@ __INLINE INT HOOKAPI     restore_hook ( Hook *     hook )
         return -1;
     }
 
+#ifdef _WIN32 // VVV defined(_WIN32) VVV
+
     DWORD dwOldProtect;
     if ( !VirtualProtect(hook->original, HOOK_SIZE, PAGE_EXECUTE_READWRITE, &dwOldProtect) )
+
+#else // ^^^ defined(_WIN32) ^^^ / VVV !defined(_WIN32) VVV
+
+    if ( !mprotect(hook->original, HOOK_SIZE, PROT_READ | PROT_WRITE) )
+
+#endif // ^^^ !defined(_WIN32) ^^^
+
     {
         fprintf(stderr, "Failed to change memory protection for restoring original function.\n");
         return -1;
     }
+
     memcpy(hook->original, hook->original_bytes, HOOK_SIZE);
+
+#ifdef _WIN32 // VVV defined(_WIN32) VVV
+
     VirtualProtect(hook->original, HOOK_SIZE, dwOldProtect, &dwOldProtect);
+
+#else // ^^^ defined(_WIN32) ^^^ / VVV !defined(_WIN32) VVV
+
+    mprotect(page_start, page_size, PROT_READ | PROT_EXEC);
+
+#endif // ^^^ !defined(_WIN32) ^^^
 
     hook->enabled = 0;
     return 0;
@@ -174,7 +228,7 @@ __INLINE INT HOOKAPI     restore_hook ( Hook *     hook )
  * 
  * @param hook Pointer to the Hook to be freed.
  */
-__INLINE VOID HOOKAPI     free_hook ( Hook *     hook )
+VOID HOOKAPI     free_hook ( Hook *     hook )
 {
     if ( hook && --hook->ref_count == 0 )
     {
@@ -189,7 +243,7 @@ __INLINE VOID HOOKAPI     free_hook ( Hook *     hook )
  * 
  * @param manager Pointer to the HookManager to be freed.
  */
-__INLINE VOID HOOKAPI     free_hook_manager ( HookManager *     manager )
+VOID HOOKAPI     free_hook_manager ( HookManager *     manager )
 {
     if ( manager )
     {
@@ -209,7 +263,7 @@ __INLINE VOID HOOKAPI     free_hook_manager ( HookManager *     manager )
  * 
  * @param manager Pointer to the HookManager whose hooks will be listed.
  */
-__INLINE VOID HOOKAPI     list_hooks ( HookManager *     manager )
+VOID HOOKAPI     list_hooks ( HookManager *     manager )
 {
     if ( !manager ) return;
     Hook * current = manager->head;
@@ -226,12 +280,9 @@ __INLINE VOID HOOKAPI     list_hooks ( HookManager *     manager )
  * 
  * @param hook Pointer to the Hook to be executed.
  */
-__INLINE __NORETURN VOID HOOKAPI     execute_hook ( Hook *     hook )
+VOID HOOKAPI     execute_hook ( Hook *     hook )
 {
-    if ( hook && hook->enabled && hook->hook )
-    {
-        hook->hook();
-    }
+    if ( hook && hook->enabled && hook->hook ) hook->hook();
 }
 
 #endif // __HOOKING_H__

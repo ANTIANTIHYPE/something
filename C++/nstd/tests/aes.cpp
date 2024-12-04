@@ -3,6 +3,8 @@
 #include <iomanip>
 #include <aes.hpp>
 
+using namespace nstd::aes;
+
 void printArray(const std::uint8_t* array, std::size_t size) 
 {
     for (std::size_t i = 0; i < size; ++i)
@@ -15,8 +17,6 @@ void printArray(const std::uint8_t* array, std::size_t size)
 
 void test()
 {
-    nstd::aes aes;
-
     std::array<std::uint8_t, 16> input = { 0x32, 0x88, 0x31, 0xe0, 0x43, 0x5a, 0x31, 0x37,
                                            0xf6, 0x30, 0x98, 0x07, 0xa8, 0x8d, 0xa2, 0x34 };
     std::array<std::uint8_t, 16> key = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
@@ -24,8 +24,8 @@ void test()
     std::array<std::uint8_t, 16> encryptedOutput;
     std::array<std::uint8_t, 16> decryptedOutput;
 
-    aes.encrypt(input.data(), key.data(), encryptedOutput.data());
-    aes.decrypt(encryptedOutput.data(), key.data(), decryptedOutput.data());
+    encrypt(input.data(), key.data(), encryptedOutput.data());
+    decrypt(encryptedOutput.data(), key.data(), decryptedOutput.data());
 
     std::cout << "Key:              ";
     printArray(key.data(), key.size());

@@ -1,6 +1,11 @@
 #pragma once
 
-// #include <iostream>
+#ifdef NEURALNETWORK
+
+#include <iostream>
+
+#endif
+
 #include <algorithm>
 #include <map>
 #include <random>
@@ -10,7 +15,7 @@ namespace nstd
 {
 
 /**
- * @brief Machine Learning
+ * @brief Machine Learning.
  */
 namespace ML
 {
@@ -26,7 +31,7 @@ public:
      * 
      * @param lambda The L2 regularization parameter.
      */
-    LinearRegression(double lambda = 0.0) : slope(0), intercept(0), lambda(lambda) {}
+    LinearRegression(double lambda = 0.0) : m_slope(0), m_intercept(0), m_lambda(lambda) {}
 
     /**
      * @brief Fits the linear regression model to the provided data.
@@ -34,7 +39,7 @@ public:
      * @param x A vector of input features.
      * @param y A vector of target values.
      */
-    inline void fit(const std::vector<double>& x, const std::vector<double>& y)
+    inline void fit(const std::vector<double>& x, const std::vector<double>& y) noexcept
     {
         int n = x.size();
         if (n == 0) return;
@@ -49,8 +54,8 @@ public:
             denominator += (x[i] - x_mean) * (x[i] - x_mean);
         }
 
-        slope = numerator / (denominator + lambda);
-        intercept = y_mean - slope * x_mean;
+        m_slope = numerator / (denominator + m_lambda);
+        m_intercept = y_mean - m_slope * x_mean;
     }
 
     /**
@@ -62,13 +67,13 @@ public:
      */
     inline double predict(double x) const
     {
-        return slope * x + intercept;
+        return m_slope * x + m_intercept;
     }
 
 private:
-    double slope;     // Slope of the regression line.
-    double intercept; // Intercept of the regression line.
-    double lambda;    // L2 regularization parameter.
+    double m_slope;     // Slope of the regression line.
+    double m_intercept; // Intercept of the regression line.
+    double m_lambda;    // L2 regularization parameter.
 }; // class LinearRegression
 
 /**
@@ -82,10 +87,10 @@ public:
      * 
      * @param num_classes The number of classes for classification.
      */
-    LogisticRegression(int num_classes, int input_size) : num_classes(num_classes), input_size(input_size)
+    LogisticRegression(int num_classes, int input_size) : num_classes(num_classes), m_inputSize(input_size)
     {
-        weights.resize(num_classes, std::vector<double>(input_size));
-        biases.resize(num_classes);
+        m_weights.resize(num_classes, std::vector<double>(input_size));
+        m_biases.resize(num_classes);
         initializeWeights();
     }
 
@@ -100,7 +105,7 @@ public:
     inline void fit(const std::vector<std::vector<double>>& x,
                     const std::vector<int>& y,
                     double learning_rate = 0.01,
-                    int epochs = 10000)
+                    int epochs = 10000) noexcept
     {
         for (int epoch = 0; epoch < epochs; ++epoch)
         {
@@ -113,12 +118,12 @@ public:
                 for (int j = 0; j < num_classes; ++j)
                 {
                     double error = (j == y[i]) ? 1.0 : 0.0;
-                    for (std::size_t k = 0; k < static_cast<std::size_t>(input_size); ++k)
+                    for (std::size_t k = 0; k < static_cast<std::size_t>(m_inputSize); ++k)
                     {
-                        weights[j][k] += learning_rate * (error - probs[j]) * x[i][k];
+                        m_weights[j][k] += learning_rate * (error - probs[j]) * x[i][k];
                     }
 
-                    biases[j] += learning_rate * (error - probs[j]);
+                    m_biases[j] += learning_rate * (error - probs[j]);
                 }
             }
         }
@@ -133,8 +138,7 @@ public:
      */
     inline std::vector<double> predict(const std::vector<double>& sample) const
     {
-        std::vector<double> scores = computeScores(sample);
-        return softmax(scores);
+        return softmax(computeScores(sample));
     }
 
     /**
@@ -151,10 +155,10 @@ public:
     }
 
 private:
-    int num_classes;                          // Number of classes for classification.
-    int input_size;                           // Number of input features.
-    std::vector<std::vector<double>> weights; // Weights for each class.
-    std::vector<double> biases;               // Biases for each class.
+    int num_classes;                            // Number of classes for classification.
+    int m_inputSize;                            // Number of input features.
+    std::vector<std::vector<double>> m_weights; // Weights for each class.
+    std::vector<double> m_biases;               // Biases for each class.
 
     /**
      * @brief Computes the raw scores for each class given an input sample.
@@ -168,11 +172,11 @@ private:
         std::vector<double> scores(num_classes, 0.0);
         for (int i = 0; i < num_classes; ++i)
         {
-            for (std::size_t j = 0; j < static_cast<std::size_t>(input_size); ++j)
+            for (std::size_t j = 0; j < static_cast<std::size_t>(m_inputSize); ++j)
             {
-                scores[i] += weights[i][j] * sample[j];
+                scores[i] += m_weights[i][j] * sample[j];
             }
-            scores[i] += biases[i];
+            scores[i] += m_biases[i];
         }
 
         return scores;
@@ -213,14 +217,15 @@ private:
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis(-0.01, 0.01);
-        for (std::vector<double>& w : weights)
+        for (std::vector<double>& w : m_weights)
         {
             for (double& weight : w)
             {
                 weight = dis(gen);
             }
         }
-        for (double& bias : biases)
+
+        for (double& bias : m_biases)
         {
             bias = dis(gen);
         }
@@ -232,14 +237,14 @@ private:
  */
 struct TreeNode
 {
-    double value;                    // Value of the node (used for leaf nodes).
-    int feature_index;               // Index of the feature used for splitting.
-    double threshold;                // Threshold value for the split.
-    std::shared_ptr<TreeNode> left;  // Pointer to the left child node.
-    std::shared_ptr<TreeNode> right; // Pointer to the right child node.
-    bool is_leaf;                    // Indicates if the node is a leaf.
+    double m_value;                    // Value of the node (used for leaf nodes).
+    int m_featureIndex;                // Index of the feature used for splitting.
+    double m_threshold;                // Threshold value for the split.
+    std::shared_ptr<TreeNode> m_left;  // Pointer to the left child node.
+    std::shared_ptr<TreeNode> m_right; // Pointer to the right child node.
+    bool m_isLeaf;                     // Indicates if the node is a leaf.
 
-    TreeNode() : value(0), feature_index(-1), threshold(0), left(nullptr), right(nullptr), is_leaf(true) {}
+    TreeNode() : m_value(0), m_featureIndex(-1), m_threshold(0), m_left(nullptr), m_right(nullptr), m_isLeaf(true) {}
 };
 
 /**
@@ -253,7 +258,7 @@ public:
      * 
      * @param max_depth The maximum depth of the tree.
      */
-    DecisionTree(int max_depth = 5) : root(nullptr), max_depth(max_depth) {}
+    DecisionTree(int max_depth = 5) : m_root(nullptr), m_maxDepth(max_depth) {}
 
     /**
      * @brief Fits the decision tree model to the provided data.
@@ -263,7 +268,7 @@ public:
      */
     inline void fit(const std::vector<std::vector<double>>& x, const std::vector<int>& y)
     {
-        root = buildTree(x, y, 0);
+        m_root = buildTree(x, y, 0);
     }
 
     /**
@@ -275,12 +280,12 @@ public:
      */
     inline int predict(const std::vector<double>& sample) const
     {
-        return predict(sample, root);
+        return predict(sample, m_root);
     }
 
 private:
-    std::shared_ptr<TreeNode> root; // Pointer to the root node of the tree.
-    int max_depth;                  // Maximum depth of the tree.
+    std::shared_ptr<TreeNode> m_root; // Pointer to the root node of the tree.
+    int m_maxDepth;                   // Maximum depth of the tree.
 
     /**
      * @brief Builds the decision tree recursively.
@@ -293,7 +298,7 @@ private:
      */
     inline std::shared_ptr<TreeNode> buildTree(const std::vector<std::vector<double>>& x, const std::vector<int>& y, int depth)
     {
-        if (x.empty() || depth >= max_depth)
+        if (x.empty() || depth >= m_maxDepth)
         {
             return createLeafNode(y);
         }
@@ -307,7 +312,7 @@ private:
         for (std::size_t feature_index = 0; feature_index < x[0].size(); ++feature_index)
         {
             std::vector<double> thresholds;
-            for (const auto& sample : x)
+            for (const std::vector<double>& sample : x)
             {
                 thresholds.push_back(sample[feature_index]);
             }
@@ -354,11 +359,11 @@ private:
         }
 
         std::shared_ptr<TreeNode> node = std::make_shared<TreeNode>();
-        node->feature_index = best_feature;
-        node->threshold = best_threshold;
-        node->left = buildTree(best_left_x, best_left_y, depth + 1);
-        node->right = buildTree(best_right_x, best_right_y, depth + 1);
-        node->is_leaf = false;
+        node->m_featureIndex = best_feature;
+        node->m_threshold = best_threshold;
+        node->m_left = buildTree(best_left_x, best_left_y, depth + 1);
+        node->m_right = buildTree(best_right_x, best_right_y, depth + 1);
+        node->m_isLeaf = false;
 
         return node;
     }
@@ -379,12 +384,12 @@ private:
              counts[label]++;
         }
 
-        node->value = std::max_element(counts.begin(), counts.end(), [](const auto& a, const auto& b)
+        node->m_value = std::max_element(counts.begin(), counts.end(), [](const auto& a, const auto& b)
         {
             return a.second < b.second;
         })->first;
 
-        node->is_leaf = true;
+        node->m_isLeaf = true;
 
         return node;
     }
@@ -442,17 +447,17 @@ private:
      */
     inline int predict(const std::vector<double>& sample, const std::shared_ptr<TreeNode>& node) const
     {
-        if (node->is_leaf)
+        if (node->m_isLeaf)
         {
-            return static_cast<int>(node->value);
+            return static_cast<int>(node->m_value);
         }
-        if (sample[node->feature_index] <= node->threshold)
+        if (sample[node->m_featureIndex] <= node->m_threshold)
         {
-            return predict(sample, node->left);
+            return predict(sample, node->m_left);
         }
         else
         {
-            return predict(sample, node->right);
+            return predict(sample, node->m_right);
         }
     }
 }; // class DecisionTree
@@ -466,10 +471,10 @@ public:
     /**
      * @brief Constructs a RandomForest object.
      * 
-     * @param n_trees The number of trees in the forest.
+     * @param m_trees The number of trees in the forest.
      * @param max_depth The maximum depth of each tree.
      */
-    RandomForest(int n_trees, int max_depth = 5) : n_trees(n_trees), max_depth(max_depth) {}
+    RandomForest(int m_trees, int max_depth = 5) : m_trees(m_trees), m_maxDepth(max_depth) {}
 
     /**
      * @brief Fits the random forest model to the provided data.
@@ -479,9 +484,9 @@ public:
      */
     inline void fit(const std::vector<std::vector<double>>& x, const std::vector<int>& y)
     {
-        for (int i = 0; i < n_trees; ++i)
+        for (int i = 0; i < m_trees; ++i)
         {
-            DecisionTree tree(max_depth);
+            DecisionTree tree(m_maxDepth);
             std::vector<std::vector<double>> sample_x;
             std::vector<int> sample_y;
             bootstrapSample(x, y, sample_x, sample_y);
@@ -506,15 +511,15 @@ public:
             votes[prediction]++;
         }
 
-        return std::ranges::max_element(votes.begin(), votes.end(), [](const auto& a, const auto& b)
+        return std::ranges::max_element(votes, [](const auto& a, const auto& b)
         {
             return a.second < b.second;
         })->first;
     }
 
 private:
-    int n_trees;                          // Number of trees in the forest.
-    int max_depth;                        // Maximum depth of each tree.
+    int m_trees;                          // Number of trees in the forest.
+    int m_maxDepth;                       // Maximum depth of each tree.
     std::vector<DecisionTree> trees;      // Vector of decision trees.
 
     /**
@@ -526,7 +531,7 @@ private:
      * @param sample_y A reference to a vector to store the sampled target values.
      */
     inline void bootstrapSample(const std::vector<std::vector<double>>& x, const std::vector<int>& y,
-                                std::vector<std::vector<double>>& sample_x, std::vector<int>& sample_y)
+                                std::vector<std::vector<double>>& sample_x, std::vector<int>& sample_y) noexcept
     {
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -540,254 +545,271 @@ private:
     }
 }; // class RandomForest
 
-        // no need to format this
+#ifdef NEURALNETWORK
 
-        // /**
-        //  * @todo REWORK
-        //  * 
-        //  * @brief A class for performing Neural Network classification.
-        //  */
-        // class NeuralNetwork
-        // {
-        // public:
-        //     /**
-        //      * @brief Constructs a NeuralNetwork object.
-        //      * 
-        //      * @param input_size The number of input features.
-        //      * @param hidden_size The number of hidden neurons.
-        //      * @param output_size The number of output neurons.
-        //      */
-        //     NeuralNetwork(int input_size, int hidden_size, int output_size) 
-        //         : input_size(input_size), hidden_size(hidden_size), output_size(output_size)
-        //     {
-        //         weights_input_hidden.resize(hidden_size, std::vector<double>(input_size));
-        //         weights_hidden_output.resize(output_size, std::vector<double>(hidden_size));
-        //         biases_hidden.resize(hidden_size);
-        //         biases_output.resize(output_size);
-        //         initializeWeights();
-        //     }
+/**
+ * @todo REWORK
+ * 
+ * @brief A class for performing Neural Network classification.
+ */
+class NeuralNetwork
+{
+public:
+    /**
+     * @brief Constructs a NeuralNetwork object.
+     * 
+     * @param input_size The number of input features.
+     * @param hidden_size The number of hidden neurons.
+     * @param output_size The number of output neurons.
+     */
+    NeuralNetwork(int input_size, int hidden_size, int output_size) 
+        : m_inputSize(input_size), m_hiddenSize(hidden_size), m_outputSize(output_size)
+    {
+        m_weightsInputHidden.resize(hidden_size, std::vector<double>(input_size));
+        m_weightsHiddenOutput.resize(output_size, std::vector<double>(hidden_size));
+        m_biasesHidden.resize(hidden_size);
+        m_biasesOutput.resize(output_size);
+        initializeWeights();
+    }
 
-        //     /**
-        //      * @brief Fits the neural network model to the provided data.
-        //      * 
-        //      * @param x A 2D vector of input features.
-        //      * @param y A 2D vector of target values.
-        //      * @param learning_rate The learning rate for training.
-        //      * @param epochs The number of iterations for training.
-        //      */
-        //     void fit(const std::vector<std::vector<double>>& x, const std::vector<std::vector<double>>& y, 
-        //              double learning_rate = 0.01, int epochs = 10000)
-        //     {
-        //         for (int epoch = 0; epoch < epochs; ++epoch)
-        //         {
-        //             for (std::size_t i = 0; i < x.size(); ++i)
-        //             {
-        //                 // Forward pass
-        //                 std::vector<double> hidden_input = addBias(x[i], biases_hidden);
-        //                 std::vector<double> hidden_output = activate(hidden_input, weights_input_hidden, true); // ReLU
-        //                 std::vector<double> output_input = addBias(hidden_output, biases_output);
-        //                 std::vector<double> final_output = activate(output_input, weights_hidden_output, true); // Sigmoid
+    /**
+     * @brief Fits the neural network model to the provided data.
+     * 
+     * @param x A 2D vector of input features.
+     * @param y A 2D vector of target values.
+     * @param learning_rate The learning rate for training.
+     * @param epochs The number of iterations for training.
+    */
+    inline void fit(const std::vector<std::vector<double>>& x, const std::vector<std::vector<double>>& y, 
+                    double learning_rate = 0.01, int epochs = 10000) noexcept
+    {
+        for (int epoch = 0; epoch < epochs; ++epoch)
+        {
+            for (std::size_t i = 0; i < x.size(); ++i)
+            {
+                // Forward pass
+                std::vector<double> hidden_input = addBias(x[i], m_biasesHidden);
+                std::vector<double> hidden_output = activate(hidden_input, m_weightsInputHidden, true); // ReLU
+                std::vector<double> output_input = addBias(hidden_output, m_biasesOutput);
+                std::vector<double> final_output = activate(output_input, m_weightsHiddenOutput, true); // Sigmoid
 
-        //                 // Backward pass
-        //                 std::vector<double> output_error = computeError(y[i], final_output);
-        //                 std::vector<double> hidden_error = backpropagate(output_error, weights_hidden_output, hidden_output);
+                // Backward pass
+                std::vector<double> output_error = computeError(y[i], final_output);
+                std::vector<double> hidden_error = backpropagate(output_error, m_weightsHiddenOutput, hidden_output);
 
-        //                 updateWeights(weights_hidden_output, hidden_output, output_error, learning_rate);
-        //                 updateWeights(weights_input_hidden, x[i], hidden_error, learning_rate);
-        //                 updateBiases(biases_output, output_error, learning_rate);
-        //                 updateBiases(biases_hidden, hidden_error, learning_rate);
-        //             }
+                updateWeights(m_weightsHiddenOutput, hidden_output, output_error, learning_rate);
+                updateWeights(m_weightsInputHidden, x[i], hidden_error, learning_rate);
+                updateBiases(m_biasesOutput, output_error, learning_rate);
+                updateBiases(m_biasesHidden, hidden_error, learning_rate);
+            }
 
-        //             std::cout << "Epoch " << epoch << ", Loss: " << computeLoss(x, y) << std::endl;
-        //         }
-        //     }
+            std::cout << "Epoch " << epoch << ", Loss: " << computeLoss(x, y) << std::endl;
+        }
+    }
 
-        //     /**
-        //      * @brief Predicts the output for a given input sample.
-        //      * 
-        //      * @param sample A vector representing the input features.
-        //      * 
-        //      * @return A vector of predicted output values.
-        //      */
-        //     std::vector<double> predict(const std::vector<double>& sample)
-        //     {
-        //         std::vector<double> hidden_output = activate(addBias(sample, biases_hidden), weights_input_hidden, true); // ReLU
-        //         return activate(addBias(hidden_output, biases_output), weights_hidden_output, false);                     // Sigmoid
-        //     }
+    /**
+     * @brief Predicts the output for a given input sample.
+     * 
+     * @param sample A vector representing the input features.
+     * 
+     * @return A vector of predicted output values.
+     */
+    inline std::vector<double> predict(const std::vector<double>& sample) noexcept
+    {
+        std::vector<double> hidden_output = activate(addBias(sample, m_biasesHidden), m_weightsInputHidden, true); // ReLU
+        return activate(addBias(hidden_output, m_biasesOutput), m_weightsHiddenOutput, false);                     // Sigmoid
+    }
 
-        // private:
-        //     int input_size;                                         // Number of input features.
-        //     int hidden_size;                                        // Number of hidden neurons.
-        //     int output_size;                                        // Number of output neurons.
-        //     std::vector<std::vector<double>> weights_input_hidden;  // Weights from input to hidden layer.
-        //     std::vector<std::vector<double>> weights_hidden_output; // Weights from hidden to output layer.
-        //     std::vector<double> biases_hidden;                      // Biases for hidden layer.
-        //     std::vector<double> biases_output;                      // Biases for output layer.
+private:
+    int m_inputSize;                                        // Number of input features.
+    int m_hiddenSize;                                       // Number of hidden neurons.
+    int m_outputSize;                                       // Number of output neurons.
+    std::vector<std::vector<double>> m_weightsInputHidden;  // Weights from input to hidden layer.
+    std::vector<std::vector<double>> m_weightsHiddenOutput; // Weights from hidden to output layer.
+    std::vector<double> m_biasesHidden;                     // Biases for hidden layer.
+    std::vector<double> m_biasesOutput;                     // Biases for output layer.
 
-        //     /**
-        //      * @brief Initializes weights and biases randomly.
-        //      */
-        //     void initializeWeights()
-        //     {
-        //         std::random_device rd;
-        //         std::mt19937 gen(rd());
-        //         std::uniform_real_distribution<> dis(-1.0, 1.0);
-        //         for (std::vector<double>& row : weights_input_hidden)
-        //         {
-        //             for (double& weight : row)
-        //             {
-        //                 weight = dis(gen);
-        //             }
-        //         }
-        //         for (std::vector<double>& row : weights_hidden_output)
-        //         {
-        //             for (double& weight : row)
-        //             {
-        //                 weight = dis(gen);
-        //             }
-        //         }
-        //         for (double& bias : biases_hidden)
-        //         {
-        //             bias = dis(gen);
-        //         }
-        //         for (double& bias : biases_output)
-        //         {
-        //             bias = dis(gen);
-        //         }
-        //     }
+    /**
+     * @brief Initializes weights and biases randomly.
+     */
+    inline void initializeWeights() noexcept
+    {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<> dis(-1.0, 1.0);
+        for (std::vector<double>& row : m_weightsInputHidden)
+        {
+            for (double& weight : row)
+            {
+                weight = dis(gen);
+            }
+        }
 
-        //     /**
-        //      * @brief Applies the activation function (ReLU for hidden layer, Sigmoid for output layer).
-        //      * 
-        //      * @param input A vector of input values.
-        //      * @param weights A matrix of weights.
-        //      * @param is_hidden_layer A boolean that indicates whether the layer is a hidden layer.
-        //      * 
-        //      * @ return A vector of activated output values.
-        //      */
-        //     std::vector<double> activate(const std::vector<double>& input, const std::vector<std::vector<double>>& weights, bool is_hidden_layer)
-        //     {
-        //         std::vector<double> output(weights[0].size());
-        //         for (std::size_t j = 0; j < weights[0].size(); ++j)
-        //         {
-        //             output[j] = 0;
-        //             for (std::size_t i = 0; i < input.size(); ++i)
-        //             {
-        //                 output[j] += input[i] * weights[j][i];
-        //             }
-        //             output[j] = is_hidden_layer ? std::max(0.0, output[j]) : 1.0 / (1.0 + std::exp(-output[j])); // ReLU for hidden, Sigmoid for output
-        //         }
-        //         return output;
-        //     }
+        for (std::vector<double>& row : m_weightsHiddenOutput)
+        {
+            for (double& weight : row)
+            {
+                weight = dis(gen);
+            }
+        }
 
-        //     /**
-        //      * @brief Adds bias to the input vector.
-        //      * 
-        //      * @param input A vector of input values.
-        //      * @param biases A vector of bias values.
-        //      * 
-        //      * @return A vector with biases added.
-        //      */
-        //     std::vector<double> addBias(const std::vector<double>& input, const std::vector<double>& biases)
-        //     {
-        //         std::vector<double> output(input);
-        //         for (std::size_t i = 0; i < biases.size(); ++i)
-        //         {
-        //             output.push_back(input[i] + biases[i]);
-        //         }
-        //         return output;
-        //     }
+        for (double& bias : m_biasesHidden)
+        {
+            bias = dis(gen);
+        }
 
-        //     /**
-        //      * @brief Computes the error between the predicted and actual output.
-        //      * 
-        //      * @param actual The actual output values.
-        //      * @param predicted The predicted output values.
-        //      * 
-        //      * @return A vector of errors.
-        //      */
-        //     std::vector<double> computeError(const std::vector<double>& actual, const std::vector<double>& predicted)
-        //     {
-        //         std::vector<double> error(actual.size());
-        //         for (std::size_t i = 0; i < actual.size(); ++i)
-        //         {
-        //             error[i] = actual[i] - predicted[i];
-        //         }
-        //         return error;
-        //     }
+        for (double& bias : m_biasesOutput)
+        {
+            bias = dis(gen);
+        }
+    }
 
-        //     double computeLoss(const std::vector<std::vector<double>>& x, const std::vector<std::vector<double>>& y)
-        //     {
-        //         double loss = 0.0;
-        //         for (std::size_t i = 0; i < x.size(); ++i)
-        //         {
-        //             std::vector<double> prediction = predict(x[i]);
-        //             for (std::size_t j = 0; j < y[i].size(); ++j)
-        //             {
-        //                 loss += std::pow(y[i][j] - prediction[j], 2); // Mean Squared Error
-        //             }
-        //         }
-        //         return loss / x.size();
-        //     }
+    /**
+     * @brief Applies the activation function (ReLU for hidden layer, Sigmoid for output layer).
+     * 
+     * @param input A vector of input values.
+     * @param weights A matrix of weights.
+     * @param is_hidden_layer A boolean that indicates whether the layer is a hidden layer.
+     * 
+     * @return A vector of activated output values.
+     */
+    std::vector<double> activate(const std::vector<double>& input, 
+                                 const std::vector<std::vector<double>>& weights, 
+                                 bool is_hidden_layer) noexcept
+    {
+        std::vector<double> output(weights[0].size());
+        for (std::size_t j = 0; j < weights[0].size(); ++j)
+        {
+            output[j] = 0;
+            for (std::size_t i = 0; i < input.size(); ++i)
+            {
+                output[j] += input[i] * weights[j][i];
+            }
+            output[j] = is_hidden_layer ? std::max(0.0, output[j]) : 1.0 / (1.0 + std::exp(-output[j])); // ReLU for hidden, Sigmoid for output
+        }
+        return output;
+    }
 
-        //     /**
-        //      * @brief Backpropagates the error to compute the hidden layer error.
-        //      * 
-        //      * @param output_error The error from the output layer.
-        //      * @param weights The weights connecting the hidden and output layers.
-        //      * @param hidden_output The output from the hidden layer.
-        //      * 
-        //      * @return A vector of hidden layer errors.
-        //      */
-        //     std::vector<double> backpropagate(const std::vector<double>& output_error, const std::vector<std::vector<double>>& weights, const std::vector<double>& hidden_output)
-        //     {
-        //         std::vector<double> hidden_error(hidden_size);
-        //         for (std::size_t j = 0; j < hidden_size; ++j)
-        //         {
-        //             hidden_error[j] = 0;
-        //             for (std::size_t k = 0; k < output_error.size(); ++k)
-        //             {
-        //                 hidden_error[j] += output_error[k] * weights[k][j];
-        //             }
-        //             hidden_error[j] *= (hidden_output[j] > 0 ? 1 : 0); // Derivative of ReLU
-        //         }
-        //         return hidden_error;
-        //     }
+    /**
+     * @brief Adds bias to the input vector.
+     * 
+     * @param input A vector of input values.
+     * @param biases A vector of bias values.
+     * 
+     * @return A vector with biases added.
+     */
+    inline std::vector<double> addBias(const std::vector<double>& input, 
+                                       const std::vector<double>& biases) noexcept
+    {
+        std::vector<double> output(input);
+        for (std::size_t i = 0; i < biases.size(); ++i)
+        {
+            output.push_back(input[i] + biases[i]);
+        }
+        return output;
+    }
 
-        //     /**
-        //      * @brief Updates the weights based on the input and error.
-        //      * 
-        //      * @param weights The weights to be updated.
-        //      * @param input The input values.
-        //      * @param error The error values.
-        //      * @param learning_rate The learning rate for the update.
-        //      */
-        //     void updateWeights(std::vector<std::vector<double>>& weights, const std::vector<double>& inputs, const std::vector<double>& errors, double learning_rate)
-        //     {
-        //         for (std::size_t j = 0; j < weights.size(); ++j)
-        //         {
-        //             for (std::size_t k = 0; k < weights[j].size(); ++k)
-        //             {
-        //                 weights[j][k] += learning_rate * errors[k] * inputs[j];
-        //             }
-        //         }
-        //     }
+    /**
+     * @brief Computes the error between the predicted and actual output.
+     * 
+     * @param actual The actual output values.
+     * @param predicted The predicted output values.
+     * 
+     * @return A vector of errors.
+     */
+    inline std::vector<double> computeError(const std::vector<double>& actual, 
+                                            const std::vector<double>& predicted) noexcept
+    {
+        std::vector<double> error(actual.size());
+        for (std::size_t i = 0; i < actual.size(); ++i)
+        {
+            error[i] = actual[i] - predicted[i];
+        }
+        return error;
+    }
 
-        //     /**
-        //      * @brief Updates the biases based on the error.
-        //      * 
-        //      * @param biases The biases to be updated.
-        //      * @param error The error values.
-        //      * @param learning_rate The learning rate for the update.
-        //      */
-        //     void updateBiases(std::vector<double>& biases, const std::vector<double>& errors, double learning_rate)
-        //     {
-        //         for (std::size_t i = 0; i < biases.size(); ++i)
-        //         {
-        //             biases[i] += learning_rate * errors[i];
-        //         }
-        //     }
-        // }; // class NeuralNetwork
+    inline double computeLoss(const std::vector<std::vector<double>>& x, 
+                              const std::vector<std::vector<double>>& y) noexcept
+    {
+        double loss = 0.0;
+        for (std::size_t i = 0; i < x.size(); ++i)
+        {
+            std::vector<double> prediction = predict(x[i]);
+            for (std::size_t j = 0; j < y[i].size(); ++j)
+            {
+                loss += std::pow(y[i][j] - prediction[j], 2); // Mean Squared Error
+            }
+        }
+        return loss / x.size();
+    }
+
+    /**
+     * @brief Backpropagates the error to compute the hidden layer error.
+     * 
+     * @param output_error The error from the output layer.
+     * @param weights The weights connecting the hidden and output layers.
+     * @param hidden_output The output from the hidden layer.
+     * 
+     * @return A vector of hidden layer errors.
+     */
+    inline std::vector<double> backpropagate(const std::vector<double>& output_error, 
+                                             const std::vector<std::vector<double>>& weights, 
+                                             const std::vector<double>& hidden_output) noexcept
+    {
+        std::vector<double> hidden_error(m_hiddenSize);
+        for (std::size_t j = 0; j < m_hiddenSize; ++j)
+        {
+            hidden_error[j] = 0;
+            for (std::size_t k = 0; k < output_error.size(); ++k)
+            {
+                hidden_error[j] += output_error[k] * weights[k][j];
+            }
+            hidden_error[j] *= (hidden_output[j] > 0 ? 1 : 0); // Derivative of ReLU
+        }
+        return hidden_error;
+    }
+
+    /**
+     * @brief Updates the weights based on the input and error.
+     * 
+     * @param weights The weights to be updated.
+     * @param input The input values.
+     * @param error The error values.
+     * @param learning_rate The learning rate for the update.
+     */
+    inline void updateWeights(std::vector<std::vector<double>>& weights, 
+                              const std::vector<double>& inputs, 
+                              const std::vector<double>& errors, 
+                              double learning_rate) noexcept
+    {
+        for (std::size_t j = 0; j < weights.size(); ++j)
+        {
+            for (std::size_t k = 0; k < weights[j].size(); ++k)
+            {
+                weights[j][k] += learning_rate * errors[k] * inputs[j];
+            }
+        }
+    }
+
+    /**
+     * @brief Updates the biases based on the error.
+     * 
+     * @param biases The biases to be updated.
+     * @param error The error values.
+     * @param learning_rate The learning rate for the update.
+     */
+    inline void updateBiases(std::vector<double>& biases, 
+                             const std::vector<double>& errors, 
+                             double learning_rate) noexcept
+    {
+        for (std::size_t i = 0; i < biases.size(); ++i)
+        {
+            biases[i] += learning_rate * errors[i];
+        }
+    }
+}; // class NeuralNetwork
+
+#endif
 
 } // namespace ML
 

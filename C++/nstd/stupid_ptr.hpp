@@ -4,7 +4,7 @@ namespace nstd
 {
 
 /**
- * @brief A stupid_ptr implementation that wraps a raw pointer.
+ * @brief Just...no.
  * 
  * @tparam T The type of the object that the pointer points to.
  */
@@ -12,14 +12,14 @@ template <typename T>
 class stupid_ptr
 {
 public:
-    T* ptr;
+    T* m_ptr;
 
-    explicit stupid_ptr(T* p = nullptr) : ptr(p) {}
+    explicit stupid_ptr(T* p = nullptr) : m_ptr(p) {}
 
     ~stupid_ptr() {}
 
-    constexpr T& operator*() const noexcept { return *ptr; }
-    constexpr T* operator->() const noexcept { return ptr; }
+    inline constexpr T&  operator*() const noexcept { return *m_ptr; }
+    inline constexpr T* operator->() const noexcept { return m_ptr; }
 }; // class stupid_ptr
 
 } // namespace nstd
