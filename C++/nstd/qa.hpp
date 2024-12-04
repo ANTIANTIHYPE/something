@@ -8,16 +8,15 @@ namespace nstd
 {
 
 /**
- * A class for the representation and manipulation of quantum m_states
- * using complex numbers.
+ * A class for the representation and manipulation of quantum states using complex numbers.
  */
 class QuantumArray
 {
 public:
     /**
-     * @brief Constructs a QuantumArray with a given m_size.
+     * @brief Constructs a QuantumArray with a given size.
      * 
-     * @param n The m_size of the quantum array.
+     * @param n The size of the quantum array.
      */
     QuantumArray(int n) : m_size(n)
     {
@@ -78,7 +77,7 @@ public:
      * 
      * The measurement is probabilistic based on the square of the amplitude of each state.
      * 
-     * @throws std::runtime_error if the norm of the m_states is zero.
+     * @throws std::runtime_error if the norm of the states is zero.
      */
     inline void measure()
     {
@@ -112,11 +111,11 @@ public:
     }
 
     /**
-     * @brief Normalizes the quantum m_states in the array.
+     * @brief Normalizes the quantum states in the array.
      * 
-     * This method adjusts the m_states so that their total probability equals 1.
+     * This method adjusts the states so that their total probability equals 1.
      * 
-     * @throws std::runtime_error if the norm of the m_states is zero.
+     * @throws std::runtime_error if the norm of the states is zero.
      */
     inline void normalize()
     {
@@ -138,60 +137,60 @@ public:
     }
 
     /**
-     * @brief Applies the Hadamard gate to the quantum m_states.
+     * @brief Applies the Hadamard gate to the quantum states.
      * 
      * @tparam T The numeric type of the quantum state amplitudes, must support basic arithmetic operations.
      * 
-     * @param m_states A reference to a vector of complex numbers representing the quantum m_states.
+     * @param states A reference to a vector of complex numbers representing the quantum states.
      * 
-     * @throws std::invalid_argument if the m_size of the m_states vector is not a power of 2.
+     * @throws std::invalid_argument if the m_size of the states vector is not a power of 2.
      */
     template <typename T>
-    inline void hadamard(std::vector<std::complex<T>>& m_states)
+    inline void hadamard(std::vector<std::complex<T>>& states)
     {
-        const std::size_t m_size = m_states.m_size();
+        const std::size_t size = states.size();
 
-        if (m_size == 0 || (m_size & (m_size - 1)) != 0)
+        if (size == 0 || (size & (size - 1)) != 0)
         {
-            throw std::invalid_argument("The m_size of the m_states vector must be a power of 2.");
+            throw std::invalid_argument("The size of the states vector must be a power of 2.");
         }
 
         std::vector<std::complex<T>> new_states(m_size);
 
-        for (std::size_t i = 0; i < m_size; ++i)
+        for (std::size_t i = 0; i < size; ++i)
         {
             std::size_t partner = i ^ (m_size / 2);
-            new_states[i] = (m_states[i] + m_states[partner]) / std::sqrt(static_cast<T>(2));
+            new_states[i] = (states[i] + states[partner]) / std::sqrt(static_cast<T>(2));
         }
 
-        m_states = std::move(new_states);
+        states = std::move(new_states);
     }
 
     /**
-     * @brief Applies the Pauli-X gate to the quantum m_states.
+     * @brief Applies the Pauli-X gate to the quantum states.
      * 
      * The Pauli-X gate flips the state at the specified index. If the state is |0⟩, it becomes |1⟩, and vice versa.
      * 
      * @tparam T The numeric type of the quantum state amplitudes, must support basic arithmetic operations.
      * 
-     * @param m_states A reference to a vector of complex numbers representing the quantum m_states.
+     * @param states A reference to a vector of complex numbers representing the quantum states.
      * @param index The index of the state to flip.
      * 
      * @throws std::out_of_range if the index is out of bounds.
      */
     template <typename T>
-    inline void PauliX(std::vector<std::complex<T>>& m_states, int index)
+    inline void PauliX(std::vector<std::complex<T>>& states, int index)
     {
-        if (index < 0 || index >= static_cast<int>(m_states.m_size()))
+        if (index < 0 || index >= static_cast<int>(states.m_size()))
         {
             throw std::out_of_range("Index out of range");
         }
 
-        m_states[index] = (m_states[index] == std::complex<T>(0, 0)) ? std::complex<T>(1, 0) : std::complex<T>(0, 0);
+        states[index] = (states[index] == std::complex<T>(0, 0)) ? std::complex<T>(1, 0) : std::complex<T>(0, 0);
     }
 
     /**
-     * @brief Prints the quantum m_states.
+     * @brief Prints the quantum states.
      * 
      * Outputs the index and value of each state in the quantum array.
      */
@@ -252,8 +251,8 @@ public:
     }
 
 private:
-    std::vector<std::complex<double>> m_states; // Vector to hold the complex m_states of the quantum array
-    int m_size;                                 // The number of m_states in the quantum array
+    std::vector<std::complex<double>> m_states; // Vector to hold the complex states of the quantum array
+    int m_size;                                 // The number of states in the quantum array
 }; // class QuantumArray
 
 } // namespace nstd
