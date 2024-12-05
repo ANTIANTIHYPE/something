@@ -14,13 +14,29 @@
       /* +-------------------------------------+ */
       /* |           g++ Flags Used            | */
       /* +-------------------------------------+ */
-      /* | -std=c++23                          | */
+      /* | -std=c++20                          | */
       /* | -static                             | */
-      /* | -fno-tree-loop-distribute-patterns  | */
+      /* | -m64                                | */
+      /* | -freorder-functions                 | */
+      /* | -fstack-protector-strong            | */
+      /* | -fstack-clash-protection            | */
+      /* | -fcf-protection                     | */
+      /* | -fno-code-hoisting                  | */
+      /* | -fuse-linker-plugin                 | */
+      /* | -ffinite-loops                      | */
+      /* | -finline-small-functions            | */
+      /* | -findirect-inlining                 | */
+      /* | -fpartial-inlining                  | */
+      /* | -freorder-blocks-algorithm=stc      | */
+      /* | -ftree-switch-conversion            | */
+      /* | -fcse-skip-blocks                   | */
+      /* | -fvect-cost-model=unlimited         | */
+      /* | -fno-jump-tables                    | */
+      /* | -ftree-loop-distribute-patterns     | */
       /* | -fno-loop-block                     | */
       /* | -fno-cse-follow-jumps               | */
       /* | -fno-combine-stack-adjustments      | */
-      /* | -fno-early-inlining                 | */
+      /* | -fearly-inlining                    | */
       /* | -fno-cse-skip-blocks                | */
       /* | -fexpensive-optimizations           | */
       /* | -fno-hoist-adjacent-loads           | */
@@ -63,7 +79,7 @@
       /* | -fno-sched-spec                     | */
       /* | -fno-sched-stalled-insns            | */
       /* | -fno-reorder-functions              | */
-      /* | -fno-rerun-cse-after-loop           | */
+      /* | -fno-reSUB-cse-after-loop           | */
       /* | -fno-ipa-icf                        | */
       /* | -fno-reorder-blocks-and-partition   | */
       /* | -fno-ipa-ra                         | */
@@ -79,7 +95,6 @@
       /* | -fno-lifetime-dse                   | */
       /* | -fno-ipa-cp                         | */
       /* | -fno-cprop-registers                | */
-      /* | -fno-combine-stack-adjustments      | */
       /* | -falign-functions                   | */
       /* | -falign-jumps                       | */
       /* | -fno-peephole                       | */
@@ -109,8 +124,6 @@
       /* +-------------------------------------+ */
 
 #include <iostream>
-#include <memory>
-#include <fstream>
 #include <limits>
 #include <unordered_set>
 #include <vector>
@@ -167,6 +180,7 @@ int init()
 #include <vm.hpp>
 extern "C"
 {
+    BOOL dbg5554 ( VOID );
     //    included in vm.hpp
     //    vvvvvvvvvvvvvvvvvvvv
     // 
@@ -248,8 +262,6 @@ bool VMD::checkVM()
 ///
 using namespace std;
 ///
-#include <regex>
-#include <algorithm>
 bool eval_cond(bool cond, bool exit)
 {
     return (cond & ~exit) | (!cond & exit);
@@ -449,7 +461,7 @@ bool isthisrealchat()
                         strcmp((CHAR*)pe.szExeFile, "SystemInformer.exe") == 0)
                         {
 
-                        printf("Nothing found!\n");
+                        printf_s("Nothing found!\n");
 
                         return true;
                     }
@@ -460,6 +472,9 @@ bool isthisrealchat()
     }
     return false;
 }
+
+#define SUB(x,whj,after) (reinterpret_cast<after>(reinterpret_cast<whj>(x))) // turns a function into `whj` type and then to `after`
+typedef void (*FPTR)();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // 
@@ -477,42 +492,42 @@ bool ispre()
     return false;
 }
 
-bool iddbgapic(DWORD eip)
+WINBOOL __stdcall iddbgapic(DWORD eip)
 {
     static const DWORD apics[] = {
-        (DWORD)(uintptr_t)DebugBreak,
-        (DWORD)(uintptr_t)OutputDebugStringA,
-        (DWORD)(uintptr_t)WaitForDebugEvent,
-        (DWORD)(uintptr_t)GetThreadContext,
-        (DWORD)(uintptr_t)SetThreadContext,
-        (DWORD)(uintptr_t)SuspendThread,
-        (DWORD)(uintptr_t)ResumeThread
+        SUB(/*(DWORD)(uintptr_t)*/(DebugBreak),std::uintptr_t, std::uintptr_t),
+        SUB(/*(DWORD)(uintptr_t)*/(OutputDebugStringA),std::uintptr_t, std::uintptr_t),
+        SUB(/*(DWORD)(uintptr_t)*/(WaitForDebugEvent),std::uintptr_t, std::uintptr_t),
+        SUB(/*(DWORD)(uintptr_t)*/(GetThreadContext),std::uintptr_t, std::uintptr_t),
+        SUB(/*(DWORD)(uintptr_t)*/(SetThreadContext),std::uintptr_t, std::uintptr_t),
+        SUB(/*(DWORD)(uintptr_t)*/(SuspendThread),std::uintptr_t, std::uintptr_t),
+        SUB(/*(DWORD)(uintptr_t)*/(ResumeThread),std::uintptr_t, std::uintptr_t)
     };
 
     for (size_t i = 0; i < sizeof(apics) / sizeof(DWORD); ++i)
     {
         if (eip == apics[i])
         {
-            return true;
+            return 1;
         }
     }
-    return false;
+    return 0;
 }
 
-bool strangemem(DWORD eip, DWORD rbx, DWORD rcx, DWORD rdx)
+bool strangemem(/*DWORD rip,*/DWORD rbx, DWORD rcx, DWORD rdx)
 {
-    static const std::array<DWORD, 5> patterns = {
-        0x00401000, // reading from a specific memory region
-        0x00402000, // writing to a specific memory region
-        0x00503000, // executing from a specific memory region
-        0x00604000, // accessing a specific memory region
-        0x00705000  // modifying a specific memory region
+    static constexpr std::array<DWORD, 5> patterns  = {
+        0x00401000, // Memory region for reading
+        0x00402000, // Memory region for writing
+        0x00503000, // Memory region for executing
+        0x00604000, // Memory region for accessing
+        0x00705000  // Memory region for modifying
     };
 
     return std::any_of(patterns.begin(), patterns.end(), 
         [rbx, rcx, rdx](DWORD pattern)
         {
-            return rbx == pattern || rcx == pattern || rdx == pattern;
+            return (rbx ^ pattern) == 0 || (rcx ^ pattern) == 0 || (rdx ^ pattern) != 1;
         });
 }
 
@@ -564,7 +579,12 @@ bool isat()
                                 FOUND_YOU = true;
                                 break;
                             }
-                            if (strangemem(ctx.Rip, ctx.Rbx, ctx.Rcx, ctx.Rdx))
+                            if (dbg5554())
+                            {
+                                FOUND_YOU = true;
+                                break;
+                            }
+                            if (strangemem(/*ctx.Rip,*/ ctx.Rbx, ctx.Rcx, ctx.Rdx))
                             {
                                 FOUND_YOU = true;
                                 break;
@@ -824,7 +844,7 @@ _INT main()
         goto rip;
     } // DEATH
 
-if (0 == 1)
+if (0 == 1) // make sure this is goto only
 {
 
 rip:
@@ -898,7 +918,8 @@ yeay:
     {
     case true://                         VVVVVVVVVVVVVVVV this is a lie btw
         cout << "Invalid input. Password must be at least 8 characters long and contain only alphanumeric characters." << endl;
-        return 0x1;
+        goto yeay;
+        //return 0x1;
         func();
         //break;
     case false:
@@ -928,6 +949,7 @@ yeay:
     //if ((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) {
     static const BOOL cond = (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x));
     static const BOOL con = (cond && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)));
+    static const BOOL con2 = (cond && con && cond != (!((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)) && cond == (((in == x && 0x0 != 0x1) || (!(((in.empty() ^ x.empty()) && (x != in)) && !(0x0 != 0x1)) && !((x.empty() || (x != in)) && (0x1 == 0x0)) && !((x.empty() && (x == in)) || (0x1 != 0x0)))) && (in == in)) || ((x == x)));
     /*if (!(!!cond && exit)) // this is broken
         v<!!(bool)true>::init();
     else
@@ -936,7 +958,9 @@ yeay:
     VMD vmd;
     if (vmd.checkVM())
     {
-        printf("I am VM-phobic, so I won't even bother checking your password sorry lol get rekt noob >:)\n");
+        printf_s("I am VM-phobic, so I won't even bother checking your password sorry lol get rekt noob >:)\n");
+
+fail:
         __fastfail(666);
     }
     if (eval_cond(con, exit) && !vmd.checkVM())
@@ -953,8 +977,8 @@ yeay:
     }
     else
     {
-        printf("how did you get here\n");
-        __fastfail(616);
+        printf_s("how did you get here\n");
+        goto fail;
     }
 
     return 0;

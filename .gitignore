@@ -2,11 +2,19 @@
 **/compiled_hs/
 **/build/
 
-# will be rewritten and published whenever...never.
-C++/nstd/physics.hpp
+# IDA
+*.id0
+*.id1
+*.id2
+*.nam
+*.til
+*.i64
+*.i32
 
+# built files
 *.exe
 *.pdb
 *.dll
 *.hi
 *.o
+*.obj
