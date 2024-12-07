@@ -1,14 +1,15 @@
 #pragma once
 
 #include <stdexcept>
-#include <string>
 #include <random>
 
-class Error : public std::runtime_error {
+class Error : public std::runtime_error
+{
 public:
     Error(const std::string& message) : std::runtime_error(message) {}
 
-    static std::string gen() {
+    static std::string gen() noexcept
+    {
         static std::random_device rd;
         static std::mt19937 mt(rd());
         static std::uniform_int_distribution<int> dist(0, 9);

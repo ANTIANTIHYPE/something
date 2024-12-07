@@ -15,7 +15,7 @@ dbg5554:
     add rax, 0
     mov rbx, rax
     xor rdx, rdx
-    mov dl, [rax + 0x2]
+    mov dl, [rax+0x2]
     add rdx, 1
     sub rdx, 1
     xor rbx, rbx

@@ -23,7 +23,7 @@
       /* | -fcf-protection                     | */
       /* | -fno-code-hoisting                  | */
       /* | -fuse-linker-plugin                 | */
-      /* | -ffinite-loops                      | */
+      /* | -fno-finite-loops                   | */
       /* | -finline-small-functions            | */
       /* | -findirect-inlining                 | */
       /* | -fpartial-inlining                  | */

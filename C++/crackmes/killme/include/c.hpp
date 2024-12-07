@@ -2,13 +2,6 @@
 
 #include <string>
 
-#ifdef _WIN32
-
-#define NOMINMAX
-#include <Windows.h>
-
-#endif
-
 class Color
 {
 public:
@@ -22,7 +15,7 @@ public:
         DEFAULT = 39,
     };
 
-    static std::string colorize(const std::string& text, Code code, bool bold = false)
+    inline std::string colorize(const std::string& text, Code code, bool bold = false)
     {
         std::string ansiCode = "\x1B[";
         if (bold) ansiCode += "1;";

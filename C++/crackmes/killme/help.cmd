@@ -1,8 +1,27 @@
 @echo off
 
-set name=killme
+if "%~1"=="" (
+    echo Usage: help.cmd file1.cpp [file2.cpp ...]
+    exit /b 1
+)
 
 set COMPILER=g++
+set name=killme
+
+%COMPILER% --version >nul 2>&1
+if errorlevel 1 (
+    echo %COMPILER% is not installed. Install it to compile %name%.
+    pause
+    exit /b
+)
+
+nasm -v >nul 2>&1
+if errorlevel 1 (
+    echo NASM is not installed. Install it to compile %name%.
+    pause
+    exit /b
+)
+
 set FLAGS=-std=c++20 -I.\include -static -m64 -freorder-functions ^
 -fstack-protector-strong -fstack-clash-protection -fcf-protection ^
 -fno-code-hoisting -fuse-linker-plugin -fno-finite-loops          ^
@@ -39,13 +58,15 @@ set FLAGS=-std=c++20 -I.\include -static -m64 -freorder-functions ^
 -D_FORTIFY_SOURCE=3 -fstack-protector                             ^
 -feliminate-unused-debug-types -feliminate-unused-debug-symbols   ^
 -finline -finline-functions-called-once
+
 nasm -f win64 %name%.asm -o %name%.obj
-%COMPILER% %FLAGS% %name%.cpp %name%.obj -liphlpapi -lws2_32 -o %name%.exe
 
-if %errorlevel%==1 (
-    echo Compilation failed!
-    pause
-    exit /b 1
+for %%f in (%*) do (
+    echo Compiling %%f...
+    %COMPILER% "%%f" -liphlpapi -lws2_32 -o "%%~nf.exe"
+    if errorlevel 1 (
+        echo Failed to compile %%f
+    ) else (
+        echo Successfully compiled %%f: %%~nf.exe
+    )
 )
-
-%name%.exe
