@@ -1,11 +1,14 @@
 #pragma once
 
+#define NOMINMAX
+#include <Windows.h>
+
 #include <string>
 
 class Color
 {
 public:
-    enum Code 
+    enum Code : UINT8
     {
         RED = 31,
         GREEN = 32,
@@ -15,7 +18,7 @@ public:
         DEFAULT = 39,
     };
 
-    inline std::string colorize(const std::string& text, Code code, bool bold = false)
+    static std::string colorize(const std::string& text, Code code, bool bold = false) noexcept
     {
         std::string ansiCode = "\x1B[";
         if (bold) ansiCode += "1;";

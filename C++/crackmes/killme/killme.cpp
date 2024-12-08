@@ -123,12 +123,8 @@
       /* | -finline-functions-called-once      | */
       /* +-------------------------------------+ */
 
+#include <algorithm>
 #include <iostream>
-#include <limits>
-#include <unordered_set>
-#include <vector>
-#include <chrono>
-#include <cctype>
 #include <source_location>
 void s()
 {
@@ -186,8 +182,10 @@ extern "C"
     // 
     //    #include <windows.h>
     //    #include <iphlpapi.h>
-#pragma comment(lib, "iphlpapi.lib")
-#pragma comment(lib, "ws2_32.lib")
+#   ifdef _MSC_VER
+#       pragma comment(lib, "iphlpapi.lib")
+#       pragma comment(lib, "ws2_32.lib")
+#   endif
 } //hardcode the link at this point
 #include <tlhelp32.h>
 #else
@@ -395,10 +393,10 @@ bool isthisrealchat()
             do
             {
                 wstring_convert<codecvt_utf8<wchar_t>> converter;
-                wstring m = converter.from_bytes((CHAR*)me.szModule);
+                wstring m = converter.from_bytes((PCHAR)me.szModule);
                 string mama = converter.to_bytes(m);
 
-                Color::Code avs = Color::BLUE;
+                Color::Code avs = Color::Code::BLUE;
                 string hold = Color::colorize(format("Checking module: {}", mama), avs);
                 //Color::Code cc = Color::COLOR;
                 //std::string colored = Color::colorize("text", cc);
@@ -406,20 +404,19 @@ bool isthisrealchat()
                 //printf(hold.c_str());
                 cout << hold << endl;
 
-                if (strcmp((CHAR*)me.szModule, "ida.wll") == 0 || 
-                    strcmp((CHAR*)me.szModule, "ida.dll") == 0 || 
-                    strcmp((CHAR*)me.szModule, "idalib64.dll") == 0 || 
-                    strcmp((CHAR*)me.szModule, "ida64.dll") == 0 || 
-                    strcmp((CHAR*)me.szModule, "idaw.exe") == 0 || 
-                    strcmp((CHAR*)me.szModule, "idat.exe") == 0 || 
-                    strcmp((CHAR*)me.szModule, "ida64.exe") == 0 || 
-                    strcmp((CHAR*)me.szModule, "ida.exe") == 0 || 
-                    strcmp((CHAR*)me.szModule, "SystemInformer.exe") == 0)
+                if (strcmp((PCHAR)me.szModule, "ida.wll") == 0 || 
+                    strcmp((PCHAR)me.szModule, "ida.dll") == 0 || 
+                    strcmp((PCHAR)me.szModule, "idalib64.dll") == 0 || 
+                    strcmp((PCHAR)me.szModule, "ida64.dll") == 0 || 
+                    strcmp((PCHAR)me.szModule, "idaw.exe") == 0 || 
+                    strcmp((PCHAR)me.szModule, "idat.exe") == 0 || 
+                    strcmp((PCHAR)me.szModule, "ida64.exe") == 0 || 
+                    strcmp((PCHAR)me.szModule, "ida.exe") == 0 || 
+                    strcmp((PCHAR)me.szModule, "SystemInformer.exe") == 0)
                     {
                     
-                    Color::Code coc = Color::RED;
-                    string t = "Nothing found!";
-                    string tc = Color::colorize(t, coc, true);
+                    Color::Code coc = Color::Code::RED;
+                    string tc = Color::colorize("Nothing found!", coc, true);
                     //printf(tc.c_str());
                     cout << tc << endl;
 
@@ -452,13 +449,13 @@ bool isthisrealchat()
             {
                 do
                 {
-                    if (strcmp((CHAR*)pe.szExeFile, "idaw.exe") == 0 || 
-                        strcmp((CHAR*)pe.szExeFile, "Microsoft.PythonTools.AttacherX86.exe") == 0 || 
-                        strcmp((CHAR*)pe.szExeFile, "hvui.exe") == 0 || 
-                        strcmp((CHAR*)pe.szExeFile, "idat64.exe") == 0 || 
-                        strcmp((CHAR*)pe.szExeFile, "ida64.exe") == 0 || 
-                        strcmp((CHAR*)pe.szExeFile, "ida32.exe") == 0 || 
-                        strcmp((CHAR*)pe.szExeFile, "SystemInformer.exe") == 0)
+                    if (strcmp((PCHAR)pe.szExeFile, "idaw.exe") == 0 || 
+                        strcmp((PCHAR)pe.szExeFile, "Microsoft.PythonTools.AttacherX86.exe") == 0 || 
+                        strcmp((PCHAR)pe.szExeFile, "hvui.exe") == 0 || 
+                        strcmp((PCHAR)pe.szExeFile, "idat64.exe") == 0 || 
+                        strcmp((PCHAR)pe.szExeFile, "ida64.exe") == 0 || 
+                        strcmp((PCHAR)pe.szExeFile, "ida32.exe") == 0 || 
+                        strcmp((PCHAR)pe.szExeFile, "SystemInformer.exe") == 0)
                         {
 
                         printf_s("Nothing found!\n");
@@ -473,7 +470,7 @@ bool isthisrealchat()
     return false;
 }
 
-#define SUB(x,whj,after) (reinterpret_cast<after>(reinterpret_cast<whj>(x))) // turns a function into `whj` type and then to `after`
+// #define SUB(x,whj,after) (reinterpret_cast<after>(reinterpret_cast<whj>(x))) // turns a function into `whj` type and then to `after`
 typedef void (*FPTR)();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -492,16 +489,16 @@ bool ispre()
     return false;
 }
 
-WINBOOL __stdcall iddbgapic(DWORD eip)
+WINBOOL __fastcall iddbgapic(DWORD eip)
 {
-    static const DWORD apics[] = {
-        SUB(/*(DWORD)(uintptr_t)*/(DebugBreak),std::uintptr_t, std::uintptr_t),
-        SUB(/*(DWORD)(uintptr_t)*/(OutputDebugStringA),std::uintptr_t, std::uintptr_t),
-        SUB(/*(DWORD)(uintptr_t)*/(WaitForDebugEvent),std::uintptr_t, std::uintptr_t),
-        SUB(/*(DWORD)(uintptr_t)*/(GetThreadContext),std::uintptr_t, std::uintptr_t),
-        SUB(/*(DWORD)(uintptr_t)*/(SetThreadContext),std::uintptr_t, std::uintptr_t),
-        SUB(/*(DWORD)(uintptr_t)*/(SuspendThread),std::uintptr_t, std::uintptr_t),
-        SUB(/*(DWORD)(uintptr_t)*/(ResumeThread),std::uintptr_t, std::uintptr_t)
+    const DWORD apics[] = {
+        /*SUB(*/(DWORD)(uintptr_t)/*(*/DebugBreak/*/*),std::uintptr_t, std::uintptr_t)*/,
+        /*SUB(*/(DWORD)(uintptr_t)/*(*/OutputDebugStringA/*),std::uintptr_t, std::uintptr_t)*/,
+        /*SUB(*/(DWORD)(uintptr_t)/*(*/WaitForDebugEvent/*),std::uintptr_t, std::uintptr_t)*/,
+        /*SUB(*/(DWORD)(uintptr_t)/*(*/GetThreadContext/*),std::uintptr_t, std::uintptr_t)*/,
+        /*SUB(*/(DWORD)(uintptr_t)/*(*/SetThreadContext/*),std::uintptr_t, std::uintptr_t)*/,
+        /*SUB(*/(DWORD)(uintptr_t)/*(*/SuspendThread/*),std::uintptr_t, std::uintptr_t)*/,
+        /*SUB(*/(DWORD)(uintptr_t)/*(*/ResumeThread/*),std::uintptr_t, std::uintptr_t)*/
     };
 
     for (size_t i = 0; i < sizeof(apics) / sizeof(DWORD); ++i)
@@ -547,7 +544,7 @@ bool isat()
     {
         do
         {
-            if (strcmp((CHAR*)pe.szExeFile, "dbgeng.exe") == 0 || strcmp((CHAR*)pe.szExeFile, "x64dbg.exe") == 0) {
+            if (strcmp((PCHAR)pe.szExeFile, "dbgeng.exe") == 0 || strcmp((PCHAR)pe.szExeFile, "x64dbg.exe") == 0) {
                 FOUND_YOU = true;
                 break;
             }
@@ -637,7 +634,7 @@ string e(const string& str)
     ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
         +[](void)
         {
-        Color::Code cc = Color::RED;
+        Color::Code cc = Color::Code::RED;
         // cout << __LINE__ << endl; // so i was debugging
         std::string colored = Color::colorize("You forgot to disable something", cc);
         // cout << __LINE__ << endl;
@@ -645,7 +642,7 @@ string e(const string& str)
         asm volatile("int $0x80" : : "a" (0x01));
         asm volatile("ret" : : "a" (0x01));
         asm volatile("int $0x3" : : "a" (0x01));
-        char* a = "Hehe";
+        PCHAR a = "Hehe";
         } :
     +[](void) {
         };
@@ -666,13 +663,13 @@ void ahbwehrhaawerwerew()
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
             +[](void)
             {
-            Color::Code cc = Color::RED;
+            Color::Code cc = Color::Code::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
             cout << colored << endl;
             asm volatile("int $0x80" : : "a" (0x01));
             asm volatile("ret" : : "a" (0x01));
             asm volatile("int $0x3" : : "a" (0x01));
-            char* a = "Hehe";
+            PCHAR a = "Hehe";
             } :
         +[](void) {
             };
@@ -688,20 +685,20 @@ struct v
     static void init()
     {
 #ifdef _DEBUG
-        Color::Code cc = Color::RED;
+        Color::Code cc = Color::Code::RED;
         std::string colored = Color::colorize("YOU ARE 1000% WRONG!", cc)
         cout << colored << endl;
         typedef void (*ptr)();
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
             +[](void)
             {
-            Color::Code cc = Color::RED;
+            Color::Code cc = Color::Code::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
             cout << colored << endl;
             asm volatile("int $0x80" : : "a" (0x01));
             asm volatile("ret" : : "a" (0x01));
             asm volatile("int $0x3" : : "a" (0x01));
-            char* a = "Hehe";
+            PCHAR a = "Hehe";
             } :
         +[](void) {
             };
@@ -712,13 +709,13 @@ struct v
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
             +[](void)
             {
-            Color::Code cc = Color::RED;
+            Color::Code cc = Color::Code::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
             cout << colored << endl;
             asm volatile("int $0x80" : : "a" (0x01));
             asm volatile("ret" : : "a" (0x01));
             asm volatile("int $0x3" : : "a" (0x01));
-            char* a = "Hehe";
+            PCHAR a = "Hehe";
             } :
         +[](void) {
             };
@@ -737,18 +734,18 @@ struct v<false> {
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
             +[](void)
             {
-            Color::Code cc = Color::RED;
+            Color::Code cc = Color::Code::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
             cout << colored << endl;
             asm volatile("int $0x80" : : "a" (0x01));
             asm volatile("ret" : : "a" (0x01));
             asm volatile("int $0x3" : : "a" (0x01));
-            char* a = "Hehe";
+            PCHAR a = "Hehe";
             } :
         +[](void) {
             };
         func();
-        Color::Code cc = Color::RED;
+        Color::Code cc = Color::Code::RED;
         std::string colored = Color::colorize("\u0050\u0061\u0073\u0073\u0077\u006F\u0072\u0064\u0020\u0069\u006E\u0063\u006F\u0072\u0072\u0065\u0063\u0074\u002E\u0020\u0054\u0072\u0079\u0020\u0061\u0067\u0061\u0069\u006E\u0021", cc);
         cout << colored << endl;
     }
@@ -776,13 +773,13 @@ void noplease()
         ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
             +[](void)
             {
-            Color::Code cc = Color::RED;
+            Color::Code cc = Color::Code::RED;
             std::string colored = Color::colorize("You forgot to disable something", cc);
             cout << colored << endl;
             asm volatile("int $0x80" : : "a" (0x01));
             asm volatile("ret" : : "a" (0x01));
             asm volatile("int $0x3" : : "a" (0x01));
-            char* a = "Hehe";
+            PCHAR a = "Hehe";
             } :
         +[](void) {
             };
@@ -805,13 +802,13 @@ void dectypt()
             THROW(); // the only second
             THROW(); // the only third
             THROW(); // the only fourth
-            Color::Code cc = Color::RED;
+            Color::Code cc = Color::Code::RED;
             std::string colored = Color::colorize("Hello :)", cc);
             cout << colored << endl;
             asm volatile("int $0x80" : : "a" (0x01));
             asm volatile("ret" : : "a" (0x01));
             asm volatile("int $0x3" : : "a" (0x01));
-            char* a = "Hehe";
+            PCHAR a = "Hehe";
             } :
         +[](void) {
             };
@@ -819,7 +816,7 @@ void dectypt()
     }
 }
 
-const char* encrypt(char* c = 0)/*we NOT are fooling people with this one*/
+const PCHAR encrypt(PCHAR c = 0)/*we NOT are fooling people with this one*/
 {
     int x = (UINT16)*c;
     string v;
@@ -829,9 +826,9 @@ const char* encrypt(char* c = 0)/*we NOT are fooling people with this one*/
         x << 1;
         v += to_string(x);
     }
-    //return const_cast<char*>(reinterpret_cast<const char*>(reinterpret_cast<const uint8_t*>(&v)[sizeof(string) - 1]));
+    //return const_cast<PCHAR>(reinterpret_cast<const PCHAR>(reinterpret_cast<const uint8_t*>(&v)[sizeof(string) - 1]));
     // this works btw vvvv
-    return (const char*)(((char*[]){(char*)v.c_str()})[0] + (sizeof(v.c_str()) - sizeof(v.c_str())) - (sizeof(v.c_str()) - 1));
+    return (const PCHAR)(((PCHAR[]){(PCHAR)v.c_str()})[0] + (sizeof(v.c_str()) - sizeof(v.c_str())) - (sizeof(v.c_str()) - 1));
 }
 _INT main()
 {
@@ -856,32 +853,32 @@ yeay:
     ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
         +[](void)
         {
-        Color::Code cc = Color::RED;
+        Color::Code cc = Color::Code::RED;
         string colored = Color::colorize("You forgot to disable something", cc);
         cout << colored << endl;
         asm __volatile__("int $0x80" : : "a" (0x01));
         asm __volatile__("ret" : : "a" (0x01));
         asm __volatile__("int $0x3" : : "a" (0x01));
-        char* a = "Hehe";
+        PCHAR a = "Hehe";
         } :
     +[](void) {
         };
     func();
 #ifdef _DEBUG
-    Color::Code cc = Color::RED;
+    Color::Code cc = Color::Code::RED;
     string colored = Color::colorize("YOU ARE 1000% WRONG!", cc);
     cout << colored << endl;
     typedef void (*ptr)();
     ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
         +[](void)
         {
-        Color::Code cc = Color::RED;
+        Color::Code cc = Color::Code::RED;
         string colored = Color::colorize("You forgot to disable something", cc);
         cout << colored << endl;
         asm volatile("int $0x80" : : "a" (0x01));
         asm volatile("ret" : : "a" (0x01));
         asm volatile("int $0x3" : : "a" (0x01));
-        char* a = "Hehe";
+        PCHAR a = "Hehe";
         } :
     +[](void) {
         };
@@ -891,20 +888,20 @@ yeay:
     cout << "Enter password: ";
     getline(cin, in);
 #ifdef _DEBUG
-    Color::Code cc = Color::RED;
+    Color::Code cc = Color::Code::RED;
     string colored = Color::colorize("YOU ARE 1000% WRONG!", cc);
     cout << colored << endl;
     typedef void (*ptr)();
     ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
         +[](void)
         {
-        Color::Code cc = Color::RED;
+        Color::Code cc = Color::Code::RED;
         string colored = Color::colorize("You forgot to disable something", cc);
         cout << colored << endl;
         asm volatile("int $0x80" : : "a" (0x01));
         asm volatile("ret" : : "a" (0x01));
         asm volatile("int $0x3" : : "a" (0x01));
-        char* a = "Hehe";
+        PCHAR a = "Hehe";
         } :
     +[](void) {
         };
@@ -926,20 +923,20 @@ yeay:
         break;
     }
 #ifdef _DEBUG
-    Color::Code cc = Color::RED;
+    Color::Code cc = Color::Code::RED;
     string colored = Color::colorize("YOU ARE 1000% WRONG!", cc);
     cout << colored << endl;
     typedef void (*ptr)();
     ptr func = (!del()      /* || _ISDBGPRESENTPTR */ || ((BOOL(*)(VOID))GetProcAddress(GetModuleHandleA("kernel32.dll"), "CheckRemoteDebuggerPresent"))()) ?
         +[](void)
         {
-        //Color::Code cc = Color::RED;
+        //Color::Code cc = Color::Code::RED;
         //string colored = Color::colorize("You forgot to disable something", cc);
         //cout << colored << endl;
         asm volatile("int $0x80" : : "a" (0x01));
         asm volatile("ret" : : "a" (0x01));
         asm volatile("int $0x3" : : "a" (0x01));
-        char* a = "Hehe";
+        PCHAR a = "Hehe";
         } :
     +[](void) {
         };
