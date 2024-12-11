@@ -173,21 +173,21 @@ int init()
 }
 #include <throw.h>
 #ifdef _WIN32
-#include <vm.hpp>
-extern "C"
-{
-    BOOL dbg5554 ( VOID );
-    //    included in vm.hpp
-    //    vvvvvvvvvvvvvvvvvvvv
-    // 
-    //    #include <windows.h>
-    //    #include <iphlpapi.h>
-#   ifdef _MSC_VER
-#       pragma comment(lib, "iphlpapi.lib")
-#       pragma comment(lib, "ws2_32.lib")
-#   endif
-} //hardcode the link at this point
-#include <tlhelp32.h>
+#   include <vm.hpp>
+    extern "C"
+    {
+        BOOL dbg5554 ( VOID );
+        //    included in vm.hpp
+        //    vvvvvvvvvvvvvvvvvvvv
+        // 
+        //    #include <windows.h>
+        //    #include <iphlpapi.h>
+#       ifdef _MSC_VER
+#           pragma comment(lib, "iphlpapi.lib")
+#           pragma comment(lib, "ws2_32.lib")
+#       endif
+    } //hardcode the link at this point
+#   include <tlhelp32.h>
 #else
 exit(-1);
 #endif
@@ -257,6 +257,19 @@ bool VMD::checkVM()
 }
 
 #include <dbgeng.h>
+LPCCH rand0(size_t l)
+{
+    const char charset[] = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890";
+    PCHAR result;
+    for (size_t i = 0; i < l; ++i)
+    {
+        result += charset[rand() % (sizeof(charset) - 1)];
+    }
+    return (LPCCH)result;
+}
+#define sec(name)           __attribute__((section(#name)))
+LPCCH secn = rand0(69);
+#define KILLME              sec(secn)
 ///
 using namespace std;
 ///
@@ -287,18 +300,18 @@ struct cualloc
     using pointer = bool*;
     using const_pointer = const bool*;
 
-    pointer alloc(size_t n)
+    pointer alloc(size_t n) KILLME
     {
         uint32_t rnd = rand();
         return new bool(!!fn() ^ (rnd & 0x1));
     }
 
-    void dealloc(pointer p, size_t n)
+    void dealloc(pointer p, size_t n) KILLME
     {
         delete p;
     }
 };
-cualloc ok;
+KILLME cualloc ok;
 cualloc::pointer pp1 = ok.alloc(0x1);
 
 auto trans = [](bool b)
@@ -307,17 +320,17 @@ auto trans = [](bool b)
     uint32_t key = _mm_crc32_u32(0, static_cast<uint32_t>(std::tolower(c)));
     return (b ? 'T' : 'F') ^ (key & 0xFF);
 };
-bool** pp2 = &pp1;
+KILLME bool** pp2 = &pp1;
 
 typedef union
 {
     int dyn;
 } Uniond;
 
-bool* ptar = *pp2;
+KILLME bool* ptar = *pp2;
 
 //#define no ((trans(*(ptar))) ^ (_rotl(GetTickCount(), 3) & 0x1))
-void cls()
+KILLME inline void cls()
 {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     COORD pos = { 0, 0 }; // top-left corner
@@ -337,7 +350,7 @@ void cls()
 */
 #include <locale>
 #include <codecvt>
-bool isthisrealchat()
+KILLME inline bool isthisrealchat()
 {
     HKEY hKey;
     LONG lResult;
@@ -477,7 +490,7 @@ typedef void (*FPTR)();
 // 
 // 
 // Additional
-bool ispre()
+KILLME inline bool ispre()
 {
     // cout << __LINE__ << endl;
     CONTEXT ctx;
@@ -489,7 +502,7 @@ bool ispre()
     return false;
 }
 
-WINBOOL __fastcall iddbgapic(DWORD eip)
+KILLME inline WINBOOL __fastcall iddbgapic(DWORD eip)
 {
     const DWORD apics[] = {
         /*SUB(*/(DWORD)(uintptr_t)/*(*/DebugBreak/*/*),std::uintptr_t, std::uintptr_t)*/,
@@ -511,7 +524,7 @@ WINBOOL __fastcall iddbgapic(DWORD eip)
     return 0;
 }
 
-bool strangemem(/*DWORD rip,*/DWORD rbx, DWORD rcx, DWORD rdx)
+KILLME inline bool strangemem(/*DWORD rip,*/DWORD rbx, DWORD rcx, DWORD rdx)
 {
     static constexpr std::array<DWORD, 5> patterns  = {
         0x00401000, // Memory region for reading
@@ -528,7 +541,7 @@ bool strangemem(/*DWORD rip,*/DWORD rbx, DWORD rcx, DWORD rdx)
         });
 }
 
-bool isat()
+KILLME inline bool isat()
 {
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapshot == INVALID_HANDLE_VALUE)
@@ -606,7 +619,7 @@ bool isat()
     return FOUND_YOU;
 }
 
-const bool del()
+KILLME inline const bool del()
 {
     // cout << __LINE__ << endl;
     return !(ispre() || isat() || isthisrealchat());
@@ -621,7 +634,7 @@ const bool del()
 // i fogot that we are adding these numbers to the null string
 int xmin = -2;
 int xmax = 6;
-string e(const string& str)
+KILLME inline string e(const string& str)
 {
     //Uniond dau{};
     string null;
@@ -650,11 +663,11 @@ string e(const string& str)
     return null + "0x0";
 }
 
-const string x = e("\u0068\u0065\u006C\u006C\u006F\u0020\u003A\u0033"); // no >:(
-const string ei = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*()-=_+[];'\\\",./<>?{}�";
-string in;
-_INT a = 0x0;
-void ahbwehrhaawerwerew()
+KILLME const string x = e("\u0068\u0065\u006C\u006C\u006F\u0020\u003A\u0033"); // no >:(
+KILLME const string ei = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*()-=_+[];'\\\",./<>?{}�";
+inline string in;
+KILLME inline _INT a = 0x0;
+KILLME inline void ahbwehrhaawerwerew()
 {
     spec();
     int x = 0x0;
@@ -751,7 +764,7 @@ struct v<false> {
     }
 };
 
-void fiuter()
+KILLME inline void fiuter()
 {
     int x = 0;
     while (x < 0xA)
@@ -761,10 +774,10 @@ void fiuter()
     }
 }
 
-void noplease()
+KILLME inline void noplease()
 {
     int x = 0;
-    while (x < 0xFF)
+    while (x < 226)
     {
         ++x;
         fiuter();
@@ -787,9 +800,10 @@ void noplease()
     }
 }
 
-void dectypt()
+KILLME inline void dectypt()
 {
     int x = 0;
+    noplease();
     while (x < 0xA)
     {
         x++;
@@ -816,8 +830,9 @@ void dectypt()
     }
 }
 
-const PCHAR encrypt(PCHAR c = 0)/*we NOT are fooling people with this one*/
+KILLME inline PCCH encrypt(PCHAR c = 0)/*we NOT are fooling people with this one*/
 {
+    noplease();
     int x = (UINT16)*c;
     string v;
     while (x < 0xFF)
@@ -828,9 +843,9 @@ const PCHAR encrypt(PCHAR c = 0)/*we NOT are fooling people with this one*/
     }
     //return const_cast<PCHAR>(reinterpret_cast<const PCHAR>(reinterpret_cast<const uint8_t*>(&v)[sizeof(string) - 1]));
     // this works btw vvvv
-    return (const PCHAR)(((PCHAR[]){(PCHAR)v.c_str()})[0] + (sizeof(v.c_str()) - sizeof(v.c_str())) - (sizeof(v.c_str()) - 1));
+    return (PCCH)(((PCHAR[]){(PCHAR)v.c_str()})[0] + (sizeof(v.c_str()) - sizeof(v.c_str())) - (sizeof(v.c_str()) - 1));
 }
-_INT main()
+/*inline*/ _INT main()
 {
     if (init() == 0)
     {
@@ -838,15 +853,16 @@ _INT main()
     } // GOOD
     else
     {
+        //noplease();
         goto rip;
     } // DEATH
 
-if (0 == 1) // make sure this is goto only
-{
+    if (0 == 1) // make sure this is goto only
+    {
 
-rip:
-    exit(RIP_EVENT);
-}
+    rip:
+        exit(RIP_EVENT);
+    }
 
 yeay:
     typedef void (*ptr)();
