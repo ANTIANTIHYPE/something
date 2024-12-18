@@ -20,7 +20,7 @@ int isDebuggerPresent()
 {
  unsigned int flags; // ;ref-1
 
- asm pushf;           // push the falgs register onto the stack
+ asm pushf;           // push the flags register onto the stack
  asm pop ax;          // pop the flags into AX
  asm mov flags, ax;   // move the flags into the `flags` variable (ref-1)
 
