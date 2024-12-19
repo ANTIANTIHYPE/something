@@ -201,6 +201,21 @@ void inverseShiftRows(std::uint8_t state[4][4]) noexcept
     state[3][0] = temp;
 }
 
+std::uint8_t galoisMultiply(std::uint8_t a, std::uint8_t b)
+{
+    std::uint8_t result = 0;
+    while (b)
+    {
+        if (b & 1)
+        {
+            result ^= a;
+        }
+        a = (a << 1) ^ ((a & 0x80) ? 0x1b : 0); // x^8 + x^4 + x^3 + x + 1
+        b >>= 1;
+    }
+    return result;
+}
+
 /**
  * @brief Mixes the columns of the state matrix.
  * 
@@ -216,10 +231,10 @@ void mixColumns(std::uint8_t state[4][4]) noexcept
             a[i] = state[i][j];
         }
 
-        state[0][j] = (0x02 * a[0]) ^ (0x03 * a[1]) ^ (0x01 * a[2]) ^ (0x01 * a[3]);
-        state[1][j] = (0x01 * a[0]) ^ (0x02 * a[1]) ^ (0x03 * a[2]) ^ (0x01 * a[3]);
-        state[2][j] = (0x01 * a[0]) ^ (0x01 * a[1]) ^ (0x02 * a[2]) ^ (0x03 * a[3]);
-        state[3][j] = (0x03 * a[0]) ^ (0x01 * a[1]) ^ (0x01 * a[2]) ^ (0x02 * a[3]);
+        state[0][j] = galoisMultiply(0x02, a[0]) ^ galoisMultiply(0x03, a[1]) ^ a[2] ^ a[3];
+        state[1][j] = a[0] ^ galoisMultiply(0x02, a[1]) ^ galoisMultiply(0x03, a[2]) ^ a[3];
+        state[2][j] = a[0] ^ a[1] ^ galoisMultiply(0x02, a[2]) ^ galoisMultiply(0x03, a[3]);
+        state[3][j] = galoisMultiply(0x03, a[0]) ^ a[1] ^ a[2] ^ galoisMultiply(0x02, a[3]);
     }
 }
 
@@ -238,10 +253,10 @@ void inverseMixColumns(std::uint8_t state[4][4]) noexcept
             a[i] = state[i][j];
         }
 
-        state[0][j] = (0x03 * a[0]) ^ (0x01 * a[1]) ^ (0x01 * a[2]) ^ (0x02 * a[3]);
-        state[1][j] = (0x01 * a[0]) ^ (0x01 * a[1]) ^ (0x02 * a[2]) ^ (0x03 * a[3]);
-        state[2][j] = (0x01 * a[0]) ^ (0x02 * a[1]) ^ (0x02 * a[2]) ^ (0x03 * a[3]);
-        state[3][j] = (0x02 * a[0]) ^ (0x03 * a[1]) ^ (0x01 * a[2]) ^ (0x01 * a[3]);
+        state[0][j] = galoisMultiply(0x0e, a[0]) ^ galoisMultiply(0x0b, a[1]) ^ galoisMultiply(0x0d, a[2]) ^ galoisMultiply(0x09, a[3]);
+        state[1][j] = galoisMultiply(0x09, a[0]) ^ galoisMultiply(0x0e, a[1]) ^ galoisMultiply(0x0b, a[2]) ^ galoisMultiply(0x0d, a[3]);
+        state[2][j] = galoisMultiply(0x0d, a[0]) ^ galoisMultiply(0x09, a[1]) ^ galoisMultiply(0x0e, a[2]) ^ galoisMultiply(0x0b, a[3]);
+        state[3][j] = galoisMultiply(0x0b, a[0]) ^ galoisMultiply(0x0d, a[1]) ^ galoisMultiply(0x09, a[2]) ^ galoisMultiply(0x0e, a[3]);
     }
 }
 
@@ -323,7 +338,7 @@ void encrypt(const std::uint8_t input[16], const std::uint8_t key[16], std::uint
     {
         for (int j = 0; j < 4; j++)
         {
-            state[j][i] = input[i * 4 + j];
+            state[i][j] = input[i * 4 + j]; // ohhh
         }
     }
 
