@@ -60,42 +60,6 @@ constexpr inline std::uint64_t htonll(std::uint64_t value)
     ((value >> 56) & 0x00000000000000FFULL);         // Move byte 7 to byte 0
 }
 
-/**
- * @brief Converts a 16-bit integer from network to host byte order.
- * 
- * @param value The 16-bit integer to convert.
- * 
- * @return The converted 16-bit integer in host byte order.
- */
-constexpr inline std::uint16_t ntohs(std::uint16_t value)
-{
-    return htons(value);
-}
-
-/**
- * @brief Converts a 32-bit integer from network to host byte order.
- * 
- * @param value The 32-bit integer to convert.
- * 
- * @return The converted 32-bit integer in host byte order.
- */
-constexpr inline std::uint32_t ntohl(std::uint32_t value)
-{
-    return htonl(value);
-}
-
-/**
- * @brief Converts a 64-bit integer from network to host byte order.
- * 
- * @param value The 64-bit integer to convert.
- * 
- * @return The converted 64-bit integer in host byte order.
- */
-constexpr inline std::uint64_t ntohll(std::uint64_t value)
-{
-    return htonll(value);
-}
-
 }; // namespace endianness
 
 } // namespace nstd
