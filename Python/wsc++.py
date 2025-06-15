@@ -15,7 +15,7 @@ def load_words() -> Optional[Set[str]]:
         with open('words_alpha.txt', 'r', encoding='utf-8') as word_file:
             return set(word_file.read().split())
     except FileNotFoundError:
-        print("Couldn't find words_alpha.txt. Download it at:\n"
+        print("download words .txt at:\n"
               "https://raw.githubusercontent.com/dwyl/english-words/refs/heads/master/words_alpha.txt")
         return None
 
