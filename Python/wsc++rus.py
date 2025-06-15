@@ -1,7 +1,7 @@
-### wsc++.py
+### wsc++rus.py
 
-#   get words .txt at:
-#   https://raw.githubusercontent.com/dwyl/english-words/refs/heads/master/words_alpha.txt
+#   бери .txt'шку отсюда:
+#   https://github.com/Poliklot/russian-words/raw/refs/heads/master/russian.txt
 
 ### 
 
@@ -12,11 +12,11 @@ from typing import Set, Optional
 
 def load_words() -> Optional[Set[str]]:
     try:
-        with open('words_alpha.txt', 'r', encoding='utf-8') as word_file:
+        with open('russian.txt', 'r', encoding='utf-8') as word_file:
             return set(word_file.read().split())
     except FileNotFoundError:
-        print("download words .txt at:\n"
-              "https://raw.githubusercontent.com/dwyl/english-words/refs/heads/master/words_alpha.txt")
+        print("не нашёл russian.txt, скачивай отсюда:\n"
+              "https://github.com/Poliklot/russian-words/raw/refs/heads/master/russian.txt")
         return None
 
 def separate_punctuation(word: str) -> (str, str):
@@ -51,11 +51,11 @@ if __name__ == '__main__':
         exit(1)
 
     while True:
-        sentence = str(input("enter: ")).lower()
+        sentence = str(input("ввод: ")).lower()
         try:
-            index = max(int(input("index: ")) - 1, 0)
+            index = max(int(input("индекс: ")) - 1, 0)
         except ValueError:
-            print("wrong index")
+            print("неверный индекс")
             continue
 
         new_sentence = [process_word(word, english_words, index) for word in sentence.split()]
