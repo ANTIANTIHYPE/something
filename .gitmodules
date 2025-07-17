@@ -10,3 +10,6 @@
 [submodule "C++/asm-analyze"]
 	path = C++/asm-analyze
 	url = https://github.com/ANTIANTIHYPE/asm-analyze.git
+[submodule "Java/uwu"]
+	path = Java/uwu
+	url = https://github.com/YOUWILLDIE666/uwu.git
